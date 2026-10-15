@@ -6,7 +6,7 @@ Source: user's main ShiftPatch experience epic, including nurse marketplace, age
 
 ## Problem and expected outcome
 
-The repository contains authentication and shift API handlers, but its home page is still the Next.js starter. Nurses need to discover and claim cross-agency shifts; agencies need to publish, inspect and reopen their own staffing opportunities through a usable interface.
+The original starting point contained API handlers and a starter home page. The role-aware UI is now implemented; browser E2E verification remains pending. Nurses need to discover and claim cross-agency shifts; agencies need to publish, inspect and reopen their own staffing opportunities through a usable interface.
 
 ## Scope
 
@@ -14,7 +14,7 @@ Included: login interface, role-specific nurse marketplace and agency dashboard,
 
 Excluded: recommendations, automatic matching, push/email notifications, advanced scheduling, registration, password recovery, token refresh, credential uploads, audit logs, timesheets, a new admin dashboard, nurse cancellation UI, new API endpoints and deployment. Existing API cancellation rights for a claiming nurse remain unchanged. The six additional parent test IDs for deferred modules remain parent obligations; this epic implements the nine listed below.
 
-Application implementation is in scope. Installing Playwright still requires explicit dependency approval.
+Application implementation is delivered. Browser E2E completion is planned in [007-ci-e2e/plan.md](../007-ci-e2e/plan.md), including dependency approval, isolated test identities and a Node 24 production build. Vercel/deployment remains excluded.
 
 ## Requirements
 

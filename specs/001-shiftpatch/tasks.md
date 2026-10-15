@@ -1,16 +1,16 @@
 # ShiftPatch — Tasks and Traceability
 
-Completed first-session work is a baseline that predates this SDD configuration; no retrospective spec-first history is claimed. Last updated: 2026-10-14.
+Completed first-session work is a baseline that predates this SDD configuration; no retrospective spec-first history is claimed. Current status reconciled: 2026-10-15; dated historical entries retained.
 
 | Task | Requirements | Status | Evidence / completion condition |
 | --- | --- | --- | --- |
 | T01 Data model and fixtures | R01,R02 | Hosted baseline verified | Historical embedded checks passed for fixtures, bcrypt, relations, reset/repetition and RLS. Hosted counts, values and the server read are recorded in 002-supabase-initial-data. Utilities were removed. Original session and historical summary archived privately outside the repository |
-| T02 Login and JWT | R03,R09 | Pending | Verify all five logins, 401 contract and invalid/expired token handling; never return hashes |
-| T03 List and create shifts | R04,R05,R09 | Pending | Exact list and agencyId derived from token; prevent creation by other roles |
-| T04 Claim | R06,R09 | Pending; resolve Q02,Q03 | Reject expired credential, accept valid claim, prevent double assignment under concurrency |
-| T05 Cancellation | R07,R09 | Pending; resolve Q01,Q03 | Both reasons, original previousNurseId, reopened shift and defined permissions |
-| T06 Agency view | R08,R09 | Pending | Agency isolation and full Shift response shape |
-| T07 UI and minimal views | R10 | Pending; resolve Q04 | All 15 IDs on correct elements, verifiable flows, Hallmark within approved scope |
+| T02 Login and JWT | R03,R09 | Implemented; verification partial | Verify all five logins, 401 contract and invalid/expired token handling; never return hashes |
+| T03 List and create shifts | R04,R05,R09 | Implemented; hosted checks recorded | Exact list and agencyId derived from token; prevent creation by other roles |
+| T04 Claim | R06,R09 | Implemented; distinct-nurse E2E pending | Reject expired credential, accept valid claim, prevent double assignment under concurrency |
+| T05 Cancellation | R07,R09 | Implemented; hosted checks recorded | Both reasons, original previousNurseId, reopened shift and defined permissions |
+| T06 Agency view | R08,R09 | Implemented; hosted checks recorded | Agency isolation and full Shift response shape |
+| T07 UI and minimal views | R10 | Implemented; final verification pending | All 15 IDs on correct elements, verifiable flows, Hallmark within approved scope |
 | T08 Session evidence | R11 | In progress | Historical private snapshots retained; manually export originals after closure and review copies before sharing |
 | T09 SDD and skills setup | R11 | Configuration created | Spec/plan/tasks, pinned sources and hashes, existing Cursor rules preserved; historical setup summary archived privately outside the repository |
 
@@ -51,3 +51,9 @@ The nurse/agency portion of T07 is planned in [005-core-user-experience/tasks.md
 ## Credential and administrative planning (2026-10-15)
 
 The remaining credential/admin portion of T07 and parent Q04 are specified in [006-credentials-admin/spec.md](../006-credentials-admin/spec.md), with implementation tasks in [006-credentials-admin/tasks.md](../006-credentials-admin/tasks.md). P0 covers private upload, metadata/status, existing server-side eligibility and the global admin dashboard/metrics. P1 is persistent shift audit; P2 is an optional scheduled-hours preview. The six remaining test IDs are mapped to their actual delivery increments. This is planning only. Feature 005 now records implemented UI and pending E2E/build limits; the earlier planning entry above remains historical.
+
+## Current MVP verification status (2026-10-15)
+
+The earlier planning and maintenance entries are historical. Migrations now extend through 009; hosted setup is recorded in 002, API implementation/hosted contracts in 004, nurse/agency UI in 005 and delivered credentials/admin/audit/scheduled preview in 006. Q01–Q04 have subsequent feature decisions. None of those historical pending labels should be read as current absence of code.
+
+Remaining closure work is planned in [007-ci-e2e/tasks.md](../007-ci-e2e/tasks.md): Node 24 quality CI, strict hosted verification, real browser E2E and the distinct-eligible-nurse race. 006 retains fixture-drift, direct audit-denial and no-show audit evidence limits. Complete native exports remain pending. Vercel/deployment is excluded from the current user request.

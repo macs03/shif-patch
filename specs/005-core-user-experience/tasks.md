@@ -22,7 +22,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | --- | --- | --- |
 | AC01–AC03 | T01, T02, T07 | RTL plus hosted login, invalid credentials, sign-out and reload. Playwright suite still pending |
 | AC04–AC05 | T03, T07 | RTL and hosted nurse marketplace showed both agencies, fixture dates, open/filled and nurse-1 |
-| AC06–AC09 | T01, T03, T07 | RTL covers claim, expiry, conflict, pending and uncertain results. Hosted mutations and the two-nurse race were not run |
+| AC06–AC09 | T01, T03, T07 | RTL passed. 004 separately records hosted handler mutations and a same-nurse concurrent race; no real browser mutation suite or distinct-eligible-nurse race has run |
 | AC10–AC12 | T01, T04, T07 | RTL covers create validation. Hosted agency-a dashboard showed only its shifts and the create form; no shift was published |
 | AC13–AC15 | T01, T05, T07 | RTL covers both cancellation reasons. Hosted filled card showed the reason control; no cancellation was submitted |
 | AC16 | T02–T05 | RTL loading, empty, retry and stale-session cases passed |
@@ -57,3 +57,9 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 - Reduced motion is handled in CSS and was not emulated in the browser.
 - T07 remains pending until Playwright installation is explicitly approved. T08 remains pending the Node 24 build and that E2E suite.
 - Evidence: native conversation includes prompts and tool outputs. This log is a summary, not a transcript. No secrets or tokens were written into the repository. No commit.
+
+## Current closure plan (2026-10-15)
+
+T01–T06 remain completed for their recorded UI scope; T07 and T08 remain pending. [007-ci-e2e/tasks.md](../007-ci-e2e/tasks.md) now tracks their remaining verification: T02 isolated backend/two eligible identities, T03 strict hosted checks, T04 real Chromium flows/race and T06 final Node 24 delivery checks. Hosted handler checks from 004 do not replace browser E2E. The second baseline nurse must remain expired. Admin/credentials now exist under 006; the earlier UI-session admin scope message is historical.
+
+The immediately preceding Codex review reran unit/UI: 6 suites, 38 tests passed, plus typecheck and lint on Node 22.20.0. No hosted tests, browser E2E or Node 24 build were rerun. This follow-up is documentation/planning only, with no dependency installation. Vercel/deployment is explicitly deferred by the user. Current-turn documentation check outcomes are recorded in 007/T00; private complete native export remains pending.

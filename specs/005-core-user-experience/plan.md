@@ -16,7 +16,7 @@ Use a small shared card and notification component where both views actually reu
 
 | Principle | Application | Exception / source |
 | --- | --- | --- |
-| I. Spec before code | AC01–AC20 defined before UI; implementation remains pending | None |
+| I. Spec before code | AC01–AC20 defined before UI; UI implemented; E2E verification remains pending | None |
 | II. Exact contracts | Nine IDs; full Shift; lowercase states; fixture dates/local hours and open/null invariant | None |
 | III. Minimal scope | Existing Next/React/Tailwind/Zod/Jest; one route, focused components; Playwright approval gate | None |
 | IV. Security | Bearer to existing handlers; no client credentials/database imports; server authority retained | None |
@@ -77,3 +77,7 @@ Playwright and browser binaries are absent from declared dependencies; installin
 4. Deliver agency listing/create and cancellation with both reasons.
 5. Complete responsive/accessibility and component failure-state checks.
 6. After dependency approval, run real browser flows and race coverage; run required application checks, review the diff and record actual evidence.
+
+## CI and E2E follow-up (2026-10-15)
+
+[007-ci-e2e/plan.md](../007-ci-e2e/plan.md) owns the planned pipeline/browser verification increment. Its T04 supplies evidence for this feature T07; its T06 closes T08 only after Node 24/full checks pass. Existing UI/RTL outcomes remain valid at their recorded versions. No E2E completion, dependency installation or deployment is claimed by this follow-up.

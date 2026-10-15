@@ -7,30 +7,29 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | ID | Requirements / criteria | Work and files | Dependencies | Status | Completion checks |
 | --- | --- | --- | --- | --- | --- |
 | T00 | R08 / planning delivery | Spec/plan/tasks, feature index and parent cross-references | None | Completed | Seven documents reviewed, 22 local links valid, AC01–AC19 covered, no new placeholders and whitespace checks clean |
-| T01 | R01–R03 / AC01, AC03, AC05–AC06, AC14 | Inspect project/Auth; identity migration; provision/link five fixtures; safe profile permissions; .env.example | T00 | Pending | Exact mapped identities; Auth hashes; no profile escalation/hash reads |
-| T02 | R01–R03,R07 / AC01–AC08 | lib/server/auth.ts, supabase.ts, login route and focused tests | T01 | Pending | Five logins; exact 401; token failures; mapped roles only; no session sharing |
-| T03 | R03–R07 / AC10–AC17 | Permission/function migration and caller-scoped db.ts | T01 | Pending | Direct hosted grants/policy/RPC checks; atomic transitions and inclusive Bogota expiry |
-| T04 | R02–R04,R06–R07 / AC04–AC11, AC15–AC17 | List/create/own-agency handlers and strict request schemas | T02, T03 | Pending | Full responses, role/ownership denial and input validation |
-| T05 | R02–R03,R05–R07 / AC04–AC08, AC12–AC17 | Claim/cancel handlers and focused tests | T02, T03 | Pending | Expired nurse denied; claimant/own-agency cancellation only; conflicts and both reasons |
-| T06 | R08 / AC18 | Complete API role matrix, live token/RLS checks, opt-in mutation setup, races and HTTP routing smoke | T04, T05 | Pending | Six contracts, bypass denial, concurrent transitions and stable fixtures |
-| T07 | R08 / AC19 | Application checks, diff/security review, evidence and parent task references | T06 | Pending | Actual tests, typecheck/lint, Node 24 build and hosted evidence; limits recorded |
+| T01 | R01–R03 / AC01, AC03, AC05–AC06, AC14 | Inspect project/Auth; identity migration; provision/link five fixtures; safe profile permissions; .env.example | T00 | Implemented; verification partial | Exact mapped identities; Auth hashes; no profile escalation/hash reads |
+| T02 | R01–R03,R07 / AC01–AC08 | lib/server/auth.ts, supabase.ts, login route and focused tests | T01 | Implemented; verification partial | Five logins; exact 401; token failures; mapped roles only; no session sharing |
+| T03 | R03–R07 / AC10–AC17 | Permission/function migration and caller-scoped db.ts | T01 | Implemented; verification partial | Direct hosted grants/policy/RPC checks; atomic transitions and inclusive Bogota expiry |
+| T04 | R02–R04,R06–R07 / AC04–AC11, AC15–AC17 | List/create/own-agency handlers and strict request schemas | T02, T03 | Implemented; verification partial | Full responses, role/ownership denial and input validation |
+| T05 | R02–R03,R05–R07 / AC04–AC08, AC12–AC17 | Claim/cancel handlers and focused tests | T02, T03 | Implemented; verification partial | Expired nurse denied; claimant/own-agency cancellation only; conflicts and both reasons |
+| T06 | R08 / AC18 | Complete API role matrix, live token/RLS checks, opt-in mutation setup, races and HTTP routing smoke | T04, T05 | Verification partial | Six contracts, bypass denial, concurrent transitions and stable fixtures |
+| T07 | R08 / AC19 | Application checks, diff/security review, evidence and parent task references | T06 | Verification partial | Actual tests, typecheck/lint, Node 24 build and hosted evidence; limits recorded |
 
-T00 is documentation delivery. Implementation and hosted checks through 2026-10-15 are in the execution log. Public signup disable and a Node 24 build remain open, so T01–T07 stay pending.
+T00 is documentation delivery. Implementation and hosted checks through 2026-10-15 are in the execution log. Public signup disable was shown by the user but not re-read through the API; the Node 24 build and broader verification matrix remain open. T01–T05 are implemented with partial verification; T06–T07 have partial verification. None is newly certified complete by this status correction.
 
 ## Coverage
 
 | Criteria | Responsible tasks | Current evidence |
 | --- | --- | --- |
-| AC01–AC03 | T01, T02 | Pending implementation |
-| AC04–AC06 | T02, T04, T05 | Pending implementation |
-| AC07–AC08 | T02, T04, T05 | Pending implementation |
-| AC09 | T04 | Pending implementation |
-| AC10–AC11 | T03, T04 | Pending implementation |
-| AC12–AC13 | T03, T05 | User decisions resolved; implementation pending |
-| AC14 | T01, T03, T06 | Pending hosted verification |
-| AC15–AC17 | T03–T05 | Pending implementation |
-| AC18 | T06 | Pending automated/live verification |
-| AC19 | T07 | Pending application checks |
+| AC01–AC03 | T01, T02 | Five mapped logins and generic invalid-credential failures passed in the recorded hosted suite; full identity/grant audit still pending |
+| AC04–AC08 | T02, T04, T05 | Route authorization implemented; hosted tampered token and role/ownership denials recorded; complete negative-token matrix not newly verified |
+| AC09 | T04 | Full baseline list passed in recorded hosted checks |
+| AC10–AC11 | T03, T04 | Create and agency isolation passed in recorded hosted checks |
+| AC12–AC13 | T03, T05 | Expired nurse denied; both cancellations and same-nurse concurrent requests passed; distinct-nurse browser race pending |
+| AC14 | T01, T03, T06 | RLS/grant implementation exists; complete direct-provider bypass checks remain unverified in this summary |
+| AC15–AC17 | T03–T05 | Validation/ownership/conflict implementation exists; recorded hosted suite covers selected cases, not the full matrix |
+| AC18 | T06 | Hosted Jest 3 suites / 4 tests passed historically; real HTTP/browser closure planned in 007 |
+| AC19 | T07 | Typecheck/lint and Node 22 build passed historically; Node 24/full delivery checks pending |
 
 ## Execution log
 

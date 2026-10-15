@@ -1,6 +1,6 @@
 # ShiftPatch — MVP Specification
 
-Status: known contracts documented; API and UI implementation pending. Source: ShiftPatch — Required API Routes & Test IDs provided by the user, reference conversation 6ad00660-0cc0-83e8-b679-efd146e0f0cc. External contracts take precedence over abbreviated examples and skill recommendations.
+Status: API/UI implemented across 004–006; CI, browser E2E and final supported-runtime verification planned in 007. Source: ShiftPatch — Required API Routes & Test IDs provided by the user, reference conversation 6ad00660-0cc0-83e8-b679-efd146e0f0cc. External contracts take precedence over abbreviated examples and skill recommendations.
 
 ## Requirements and acceptance
 

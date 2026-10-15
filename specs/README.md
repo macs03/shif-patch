@@ -31,8 +31,9 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [001-shiftpatch/spec.md](001-shiftpatch/spec.md): overall MVP contracts and previously prepared baseline.
 - [002-supabase-initial-data/spec.md](002-supabase-initial-data/spec.md): first hosted fixture load and private Next.js connection.
 - [003-test-harness/spec.md](003-test-harness/spec.md): Jest, React Testing Library and Zod test harness.
-- [004-auth-rbac-api/spec.md](004-auth-rbac-api/spec.md): planned Supabase Auth, server/database authorization and six REST API contracts.
+- [004-auth-rbac-api/spec.md](004-auth-rbac-api/spec.md): implemented Supabase Auth, server/database authorization and six REST API contracts; verification limits remain.
 - [005-core-user-experience/spec.md](005-core-user-experience/spec.md): login, nurse marketplace, agency management and critical browser workflows on the existing API. UI is implemented; Playwright E2E is still pending dependency approval.
 - [006-credentials-admin/spec.md](006-credentials-admin/spec.md): private credential upload, admin shift overview, audit log and scheduled-hours preview. Implemented and manually verified, with the limits recorded in its tasks.
+- [007-ci-e2e/spec.md](007-ci-e2e/spec.md): planned GitHub Actions quality/hosted verification, real browser E2E and current-status reconciliation. Vercel/deployment is excluded.
 
-Feature 004 has implementation and hosted results in its execution log, with remaining verification limits; its pending task labels do not mean the code is absent. Cancellation and credential expiry decisions are resolved there.
+Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.
