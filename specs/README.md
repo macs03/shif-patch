@@ -25,3 +25,10 @@ For a new feature, copy the three documents from `_TEMPLATE_/` into `specs/NNN-s
 Example next-session prompt: “Read AGENTS.md, the constitution and specs/001-shiftpatch. Work on T02 for R03/R09, resolve relevant open questions, update the plan if needed, implement and verify the login contract. Preserve the original transcript according to specs/CONSTITUTION.md.”
 
 This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are not installed. The first database baseline existed before these documents and is recorded as documented after implementation. Future tasks follow spec → plan → tasks → code → evidence; no retrospective spec-first history is claimed.
+
+## Feature index
+
+- [001-shiftpatch/spec.md](001-shiftpatch/spec.md): overall MVP contracts and previously prepared baseline.
+- [002-supabase-initial-data/spec.md](002-supabase-initial-data/spec.md): first hosted fixture load and private Next.js connection; implementation is pending.
+
+Next work item: start 002-supabase-initial-data/T01, then complete its hosted readiness criteria before starting the parent login task.

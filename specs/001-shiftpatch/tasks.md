@@ -37,3 +37,5 @@ Historical session 1 checks passed for TypeScript (Node 24.19.0), ESLint, exact 
 Historical skills checks confirmed all 107 Hallmark and 36 Supabase files matched pinned upstream revisions. This cleanup changes documentation/configuration only; implementation, fixture contracts and pending hosted verification are unchanged.
 
 Cleanup verification: thirteen local links valid, no obsolete project-documentation references, installed skill hashes intact, all eight private archive files matched their checksums, constitution/plan versions consistent and git diff --check passed. The first inline cleanup command had a syntax error before any mutation; it was corrected and the cleanup completed. No application tests were rerun for this documentation/configuration-only change.
+
+Hosted setup and verification for parent T01 are now tracked by [002-supabase-initial-data/tasks.md](../002-supabase-initial-data/tasks.md). Creating that feature specification does not complete the hosted baseline.
