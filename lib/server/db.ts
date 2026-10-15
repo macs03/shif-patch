@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { shiftSchema } from "../domain/schemas";
 import type { Shift, ShiftRole, ShiftStatus } from "../domain/types";
 
 const CONFIGURATION_ERROR = "Supabase server configuration is invalid";
@@ -108,7 +109,7 @@ export async function readShifts(): Promise<Shift[]> {
     const status = shiftStatus(shift.status);
     const claimedBy = shift.claimed_by;
     if ((status === "open") !== (claimedBy === null)) throw new Error(READ_ERROR);
-    return {
+    const mapped = {
       id: shift.id,
       agencyId: shift.agency_id,
       agencyName: agencyName(shift.agencies),
@@ -119,5 +120,8 @@ export async function readShifts(): Promise<Shift[]> {
       status,
       claimedBy,
     };
+    const parsed = shiftSchema.safeParse(mapped);
+    if (!parsed.success) throw new Error(READ_ERROR);
+    return parsed.data;
   });
 }

@@ -29,6 +29,7 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 ## Feature index
 
 - [001-shiftpatch/spec.md](001-shiftpatch/spec.md): overall MVP contracts and previously prepared baseline.
-- [002-supabase-initial-data/spec.md](002-supabase-initial-data/spec.md): first hosted fixture load and private Next.js connection; implementation is pending.
+- [002-supabase-initial-data/spec.md](002-supabase-initial-data/spec.md): first hosted fixture load and private Next.js connection.
+- [003-test-harness/spec.md](003-test-harness/spec.md): Jest, React Testing Library and Zod test harness.
 
-Next work item: start 002-supabase-initial-data/T01, then complete its hosted readiness criteria before starting the parent login task.
+Next work item: parent login and API routes per 001-shiftpatch after harness is in place.
