@@ -11,15 +11,42 @@ import {
   listAgency,
   listMarketplace,
   login,
+  readAdminDashboard,
+  readAudit,
+  readCredential,
+  submitCredential,
 } from "@/lib/client/api";
-import type { CancellationReason, SessionUser, Shift } from "@/lib/domain/types";
+import type { AuditEvent, CancellationReason, CredentialResponse, SessionUser, Shift } from "@/lib/domain/types";
+import { AdminDashboard } from "./AdminDashboard";
 import { CreateShiftForm } from "./CreateShiftForm";
+import { CredentialForm } from "./CredentialForm";
 import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
 
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
 type ListState = { status: "loading" | "ready" | "error"; shifts: Shift[]; loadError: string | null };
+type CredentialState = { status: "idle" | "loading" | "ready" | "error"; view: CredentialResponse | null; error: string | null };
+type AdminState = {
+  status: "idle" | "loading" | "ready" | "error";
+  shifts: Shift[];
+  metrics: { open: number; filled: number } | null;
+  error: string | null;
+  events: AuditEvent[];
+  auditStatus: "idle" | "loading" | "ready" | "error";
+  auditError: string | null;
+};
+
+const idleCredential: CredentialState = { status: "idle", view: null, error: null };
+const idleAdmin: AdminState = {
+  status: "idle",
+  shifts: [],
+  metrics: null,
+  error: null,
+  events: [],
+  auditStatus: "idle",
+  auditError: null,
+};
 
 const EXPIRED = "Your session has expired. Sign in again.";
 
@@ -45,12 +72,16 @@ export function ShiftPatchApp() {
   const [creating, setCreating] = useState(false);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [hold, setHold] = useState(false);
+  const [credential, setCredential] = useState<CredentialState>(idleCredential);
+  const [credentialPending, setCredentialPending] = useState(false);
+  const [admin, setAdmin] = useState<AdminState>(idleAdmin);
 
   const epoch = useRef(0);
   const inflight = useRef(new Set<AbortController>());
   const pendingRef = useRef<string | null>(null);
   const holdRef = useRef(false);
   const loginLock = useRef(false);
+  const credentialLock = useRef(false);
 
   const setHoldBoth = useCallback((value: boolean) => {
     holdRef.current = value;
@@ -78,6 +109,10 @@ export function ShiftPatchApp() {
     setPassword("");
     setLoginError("");
     setList({ status: "ready", shifts: [], loadError: null });
+    setCredential(idleCredential);
+    setCredentialPending(false);
+    credentialLock.current = false;
+    setAdmin(idleAdmin);
     setNotice({ tone: "error", message: EXPIRED });
   }, [invalidate, setHoldBoth]);
 
@@ -111,18 +146,93 @@ export function ShiftPatchApp() {
     }
   }, [expire, setHoldBoth]);
 
+  const loadCredential = useCallback(async (target: Session, signal: AbortSignal, snap: number) => {
+    try {
+      const view = await readCredential(target.token, signal);
+      if (epoch.current !== snap) return;
+      setCredential({ status: "ready", view, error: null });
+    } catch (error) {
+      if (isAbort(error) || epoch.current !== snap) return;
+      if (error instanceof ApiError && error.status === 401) {
+        expire();
+        return;
+      }
+      const message = error instanceof ApiError ? error.message : "Credential could not be loaded.";
+      setCredential((prev) => (
+        prev.view
+          ? { status: "ready", view: prev.view, error: message }
+          : { status: "error", view: null, error: message }
+      ));
+    }
+  }, [expire]);
+
+  const loadAdmin = useCallback(async (target: Session, signal: AbortSignal, snap: number) => {
+    const dashboardPromise = readAdminDashboard(target.token, signal);
+    const auditPromise = readAudit(target.token, signal);
+    const [dashboard, audit] = await Promise.allSettled([dashboardPromise, auditPromise]);
+    if (isAbort(dashboard.status === "rejected" ? dashboard.reason : null) || epoch.current !== snap) return;
+    if (dashboard.status === "rejected" && dashboard.reason instanceof ApiError && dashboard.reason.status === 401) {
+      expire();
+      return;
+    }
+    if (audit.status === "rejected" && audit.reason instanceof ApiError && audit.reason.status === 401) {
+      expire();
+      return;
+    }
+    if (epoch.current !== snap) return;
+    setAdmin((prev) => {
+      const next = { ...prev };
+      if (dashboard.status === "fulfilled") {
+        next.status = "ready";
+        next.shifts = dashboard.value.shifts;
+        next.metrics = dashboard.value.metrics;
+        next.error = null;
+      } else if (!(dashboard.reason instanceof DOMException && dashboard.reason.name === "AbortError")) {
+        const message = dashboard.reason instanceof ApiError ? dashboard.reason.message : "Shifts could not be loaded.";
+        if (prev.metrics) {
+          next.status = "ready";
+          next.error = message;
+        } else {
+          next.status = "error";
+          next.shifts = [];
+          next.metrics = null;
+          next.error = message;
+        }
+      }
+      if (audit.status === "fulfilled") {
+        next.auditStatus = "ready";
+        next.events = audit.value;
+        next.auditError = null;
+      } else if (!(audit.reason instanceof DOMException && audit.reason.name === "AbortError")) {
+        const message = audit.reason instanceof ApiError ? audit.reason.message : "Audit could not be loaded.";
+        if (prev.auditStatus === "ready") {
+          next.auditError = message;
+        } else {
+          next.auditStatus = "error";
+          next.events = [];
+          next.auditError = message;
+        }
+      }
+      return next;
+    });
+  }, [expire]);
+
   useEffect(() => {
-    if (!session || session.user.role === "admin") return;
+    if (!session) return;
     const controller = new AbortController();
     const requests = inflight.current;
     requests.add(controller);
     const snap = epoch.current;
-    void load(session, controller.signal, snap, false);
+    if (session.user.role === "admin") void loadAdmin(session, controller.signal, snap);
+    else {
+      void load(session, controller.signal, snap, false);
+      if (session.user.role === "nurse") void loadCredential(session, controller.signal, snap);
+    }
     return () => {
       controller.abort();
       requests.delete(controller);
     };
-  }, [session, load]);
+  }, [session, load, loadAdmin, loadCredential]);
 
   function begin(key: string): { signal: AbortSignal; snap: number } | null {
     if (!session || pendingRef.current || holdRef.current) return null;
@@ -141,7 +251,14 @@ export function ShiftPatchApp() {
   }
 
   async function refresh(releaseHold: boolean) {
-    if (!session || session.user.role === "admin") return;
+    if (!session) return;
+    if (session.user.role === "admin") {
+      const controller = new AbortController();
+      inflight.current.add(controller);
+      await loadAdmin(session, controller.signal, epoch.current);
+      inflight.current.delete(controller);
+      return;
+    }
     const current = session;
     const controller = new AbortController();
     inflight.current.add(controller);
@@ -214,6 +331,12 @@ export function ShiftPatchApp() {
       setList(result.user.role === "admin"
         ? { status: "ready", shifts: [], loadError: null }
         : { status: "loading", shifts: [], loadError: null });
+      setCredential(result.user.role === "nurse"
+        ? { status: "loading", view: null, error: null }
+        : idleCredential);
+      setAdmin(result.user.role === "admin"
+        ? { ...idleAdmin, status: "loading", auditStatus: "loading" }
+        : idleAdmin);
       setSession({ token: result.token, user: result.user });
     } catch (error) {
       if (isAbort(error) || epoch.current !== snap) return;
@@ -239,12 +362,50 @@ export function ShiftPatchApp() {
     setLoginError("");
     setNotice(null);
     setList({ status: "ready", shifts: [], loadError: null });
+    setCredential(idleCredential);
+    setCredentialPending(false);
+    credentialLock.current = false;
+    setAdmin(idleAdmin);
+  }
+
+  async function onCredential(document: File, expiresOn: string) {
+    if (!session || credentialLock.current) return;
+    credentialLock.current = true;
+    setCredentialPending(true);
+    const controller = new AbortController();
+    inflight.current.add(controller);
+    const snap = epoch.current;
+    try {
+      const view = await submitCredential(session.token, document, expiresOn, controller.signal);
+      if (epoch.current !== snap) return;
+      setCredential({ status: "ready", view, error: null });
+      setNotice({
+        tone: view.status === "expired" ? "error" : "success",
+        message: view.status === "expired"
+          ? "Credential saved. It is expired and cannot be used to claim a shift."
+          : "Credential saved.",
+      });
+    } catch (error) {
+      if (isAbort(error) || epoch.current !== snap) return;
+      if (error instanceof ApiError && error.status === 401) {
+        expire();
+        return;
+      }
+      const message = error instanceof ApiError ? error.message : "Credential could not be saved.";
+      setNotice({ tone: "error", message });
+    } finally {
+      inflight.current.delete(controller);
+      if (epoch.current === snap) {
+        credentialLock.current = false;
+        setCredentialPending(false);
+      }
+    }
   }
 
   const mode = session?.user.role === "nurse" || session?.user.role === "agency" ? session.user.role : null;
 
   return (
-    <div className="shell">
+    <div className={session?.user.role === "admin" ? "shell shell-wide" : "shell"}>
       <header className="mast">
         <p className="mark">ShiftPatch</p>
         <div className="mast-row">
@@ -259,7 +420,16 @@ export function ShiftPatchApp() {
       </header>
       <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
       {session?.user.role === "admin" ? (
-        <p className="scope-note">Signed in. Staffing actions are not available for this account.</p>
+        <AdminDashboard
+          shifts={admin.shifts}
+          metrics={admin.metrics}
+          shiftState={admin.status === "idle" ? "loading" : admin.status}
+          shiftError={admin.error}
+          events={admin.events}
+          auditState={admin.auditStatus === "idle" ? "loading" : admin.auditStatus}
+          auditError={admin.auditError}
+          onRefresh={() => void refresh(false)}
+        />
       ) : null}
       {!session ? (
         <form className="login" onSubmit={onLogin}>
@@ -298,6 +468,14 @@ export function ShiftPatchApp() {
             {loginPending ? "Signing in" : "Sign in"}
           </button>
         </form>
+      ) : null}
+      {session?.user.role === "nurse" ? (
+        <CredentialForm
+          view={credential.view}
+          loadError={credential.error}
+          pending={credentialPending}
+          onSubmit={(document, expiresOn) => void onCredential(document, expiresOn)}
+        />
       ) : null}
       {mode ? (
         <section className="board" aria-busy={list.status === "loading"}>

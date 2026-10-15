@@ -13,7 +13,7 @@ function isRealDate(value: string): boolean {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
-const calendarDate = localDate.refine(isRealDate);
+export const calendarDate = localDate.refine(isRealDate);
 
 const shiftBase = z.object({
   id: z.string().min(1),
@@ -90,3 +90,68 @@ export const cancelShiftResponseSchema = shiftSchema.and(
 export const apiErrorSchema = z.object({
   error: z.string().min(1),
 });
+
+const documentMime = z.enum(["application/pdf", "image/jpeg", "image/png"]);
+
+export const credentialMetadataSchema = z
+  .object({
+    expiresOn: calendarDate,
+    documentName: z.string().min(1).max(200).nullable(),
+    mimeType: documentMime.nullable(),
+    sizeBytes: z.number().int().positive().max(2_097_152).nullable(),
+    uploadedAt: z.string().min(1).nullable(),
+  })
+  .strict()
+  .refine((value) => {
+    const fields = [value.documentName, value.mimeType, value.sizeBytes, value.uploadedAt];
+    const present = fields.filter((field) => field !== null).length;
+    return present === 0 || present === fields.length;
+  });
+
+export const credentialStatusSchema = z.enum(["valid", "expired", "missing"]);
+
+export const credentialResponseSchema = z
+  .object({
+    credential: credentialMetadataSchema.nullable(),
+    status: credentialStatusSchema,
+  })
+  .strict()
+  .refine((value) => (value.credential === null) === (value.status === "missing"));
+
+export const adminDashboardResponseSchema = z
+  .object({
+    shifts: z.array(shiftSchema),
+    metrics: z
+      .object({
+        open: z.number().int().nonnegative(),
+        filled: z.number().int().nonnegative(),
+      })
+      .strict(),
+  })
+  .strict()
+  .refine((value) => {
+    const open = value.shifts.filter((shift) => shift.status === "open").length;
+    return value.metrics.open === open && value.metrics.filled === value.shifts.length - open;
+  });
+
+export const auditEventSchema = z
+  .object({
+    id: z.string().uuid(),
+    actorId: z.string().min(1),
+    shiftId: z.string().min(1),
+    action: z.enum(["create", "claim", "cancel"]),
+    occurredAt: z.string().min(1),
+    reason: z.enum(["no-show", "advance"]).nullable(),
+    previousNurseId: z.string().min(1).nullable(),
+  })
+  .strict()
+  .refine((value) => {
+    if (value.action === "cancel") return value.reason !== null && value.previousNurseId !== null;
+    return value.reason === null && value.previousNurseId === null;
+  });
+
+export const auditResponseSchema = z
+  .object({
+    events: z.array(auditEventSchema).max(50),
+  })
+  .strict();

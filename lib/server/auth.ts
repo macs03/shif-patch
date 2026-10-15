@@ -7,6 +7,7 @@ import { createAuthClient, createDataClient, supabaseConfig } from "./supabase";
 
 export type Caller = {
   token: string;
+  authUserId: string;
   id: string;
   name: string;
   role: UserRole;
@@ -69,7 +70,7 @@ export async function loadCaller(token: string): Promise<Caller | null> {
   if (!row) return null;
   const parsed = sessionUserSchema.safeParse({ id: row.id, name: row.name, role: row.role });
   if (!parsed.success) throw new HttpError(500, "Internal server error");
-  return { token, ...parsed.data, agencyId: row.agency_id };
+  return { token, authUserId: userId, ...parsed.data, agencyId: row.agency_id };
 }
 
 export function bearerToken(request: Request): string {

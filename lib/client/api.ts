@@ -1,14 +1,20 @@
 import {
+  adminDashboardResponseSchema,
   agencyShiftsResponseSchema,
   apiErrorSchema,
+  auditResponseSchema,
   cancelShiftResponseSchema,
+  credentialResponseSchema,
   loginResponseSchema,
   shiftSchema,
   shiftsResponseSchema,
 } from "@/lib/domain/schemas";
 import type {
+  AdminDashboardResponse,
+  AuditEvent,
   CancellationReason,
   CreateShiftRequest,
+  CredentialResponse,
   SessionUser,
   Shift,
 } from "@/lib/domain/types";
@@ -29,13 +35,18 @@ function isAbort(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-async function send(path: string, token: string | null, init: RequestInit): Promise<Response> {
+async function send(
+  path: string,
+  token: string | null,
+  init: RequestInit,
+  jsonBody = true,
+): Promise<Response> {
   try {
     return await fetch(path, {
       ...init,
       cache: "no-store",
       headers: {
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(jsonBody && init.body ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       signal: init.signal,
@@ -116,6 +127,34 @@ export async function claimShift(token: string, shiftId: string, signal?: AbortS
     signal,
   });
   return read(response, (payload) => shiftSchema.parse(payload), true);
+}
+
+export async function readCredential(token: string, signal?: AbortSignal): Promise<CredentialResponse> {
+  const response = await send("/api/credentials", token, { method: "GET", signal });
+  return read(response, (body) => credentialResponseSchema.parse(body), false);
+}
+
+export async function submitCredential(
+  token: string,
+  document: File,
+  expiresOn: string,
+  signal?: AbortSignal,
+): Promise<CredentialResponse> {
+  const body = new FormData();
+  body.set("document", document);
+  body.set("expiresOn", expiresOn);
+  const response = await send("/api/credentials", token, { method: "POST", body, signal }, false);
+  return read(response, (payload) => credentialResponseSchema.parse(payload), true);
+}
+
+export async function readAdminDashboard(token: string, signal?: AbortSignal): Promise<AdminDashboardResponse> {
+  const response = await send("/api/admin/dashboard", token, { method: "GET", signal });
+  return read(response, (body) => adminDashboardResponseSchema.parse(body), false);
+}
+
+export async function readAudit(token: string, signal?: AbortSignal): Promise<AuditEvent[]> {
+  const response = await send("/api/admin/audit", token, { method: "GET", signal });
+  return read(response, (body) => auditResponseSchema.parse(body).events, false);
 }
 
 export async function cancelShift(

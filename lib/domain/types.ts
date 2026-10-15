@@ -9,6 +9,12 @@ import type {
   loginRequestSchema,
   loginResponseSchema,
   sessionUserSchema,
+  adminDashboardResponseSchema,
+  auditEventSchema,
+  auditResponseSchema,
+  credentialMetadataSchema,
+  credentialResponseSchema,
+  credentialStatusSchema,
   shiftSchema,
   shiftsResponseSchema,
   userRoleSchema,
@@ -29,6 +35,12 @@ export type AgencyShiftsResponse = z.infer<typeof agencyShiftsResponseSchema>;
 export type CancelShiftRequest = z.infer<typeof cancelShiftRequestSchema>;
 export type CancelShiftResponse = z.infer<typeof cancelShiftResponseSchema>;
 export type ApiError = z.infer<typeof apiErrorSchema>;
+export type CredentialMetadata = z.infer<typeof credentialMetadataSchema>;
+export type CredentialStatus = z.infer<typeof credentialStatusSchema>;
+export type CredentialResponse = z.infer<typeof credentialResponseSchema>;
+export type AdminDashboardResponse = z.infer<typeof adminDashboardResponseSchema>;
+export type AuditEvent = z.infer<typeof auditEventSchema>;
+export type AuditResponse = z.infer<typeof auditResponseSchema>;
 
 export interface Agency {
   id: string;

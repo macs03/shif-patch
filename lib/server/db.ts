@@ -1,7 +1,7 @@
 import "server-only";
 
-import { shiftSchema } from "../domain/schemas";
-import type { CancellationReason, Shift, ShiftRole, ShiftStatus } from "../domain/types";
+import { auditResponseSchema, shiftSchema } from "../domain/schemas";
+import type { AuditEvent, CancellationReason, Shift, ShiftRole, ShiftStatus } from "../domain/types";
 import { HttpError } from "./http";
 import { createDataClient, supabaseConfig } from "./supabase";
 
@@ -15,6 +15,7 @@ const DB_ERRORS: Record<string, { status: number; error: string }> = {
     error: "Credential expired, cannot claim shift",
   },
   shiftpatch_invalid: { status: 400, error: "Invalid request" },
+  shiftpatch_object_missing: { status: 500, error: "Internal server error" },
 };
 
 type AgencyEmbed = { name: string };
@@ -132,7 +133,7 @@ function unavailableMessage(message: string): boolean {
   return /fetch failed|network|timeout|ECONN|ENOTFOUND|503/i.test(message);
 }
 
-function throwDataError(error: { message?: string; code?: string }): never {
+export function throwDataError(error: { message?: string; code?: string }): never {
   const message = error.message?.trim() ?? "";
   const key = /shiftpatch_[a-z0-9_]+/.exec(message)?.[0];
   const mapped = key ? DB_ERRORS[key] : undefined;
@@ -220,6 +221,43 @@ export async function createShift(
 
 export async function claimShift(token: string, id: string): Promise<Shift> {
   return fromRpc(await callRpc(token, "claim_shift", { p_id: id }));
+}
+
+export async function readAuditEvents(token: string): Promise<AuditEvent[]> {
+  const supabase = dataClient(token);
+  let data: unknown;
+  let error: { message: string; code?: string } | null;
+  try {
+    const result = await supabase.rpc("read_audit_events");
+    data = result.data;
+    error = result.error;
+  } catch {
+    throw new HttpError(503, "Service unavailable");
+  }
+  if (error) throwDataError(error);
+  const rows = Array.isArray(data) ? data : [];
+  return auditResponseSchema.parse({
+    events: rows.map((row) => {
+      const event = row as {
+        id: string;
+        actor_id: string;
+        shift_id: string;
+        action: string;
+        occurred_at: string | Date;
+        reason: string | null;
+        previous_nurse_id: string | null;
+      };
+      return {
+        id: event.id,
+        actorId: event.actor_id,
+        shiftId: event.shift_id,
+        action: event.action,
+        occurredAt: event.occurred_at instanceof Date ? event.occurred_at.toISOString() : event.occurred_at,
+        reason: event.reason,
+        previousNurseId: event.previous_nurse_id,
+      };
+    }),
+  }).events;
 }
 
 export async function cancelShift(

@@ -326,6 +326,7 @@ describe("ShiftPatchApp", () => {
     let fail = true;
     installFetch((url) => {
       if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
       if (fail) return jsonResponse({ error: "Service unavailable" }, 503);
       return jsonResponse({ shifts: [] });
     });
@@ -340,11 +341,70 @@ describe("ShiftPatchApp", () => {
     (fetch as jest.Mock).mockImplementation((input: RequestInfo | URL) => {
       const url = String(input);
       if (url.endsWith("/api/auth/login")) return Promise.resolve(jsonResponse({ token: "token-admin", user: admin }));
-      return Promise.reject(new Error("admin must not load shifts"));
+      if (url.endsWith("/api/admin/dashboard")) {
+        return Promise.resolve(jsonResponse({ shifts: trialShifts, metrics: { open: 2, filled: 1 } }));
+      }
+      if (url.endsWith("/api/admin/audit")) return Promise.resolve(jsonResponse({ events: [] }));
+      return Promise.reject(new Error("admin must not call staffing endpoints"));
     });
     await signIn("alex.kim@example.com");
-    expect(await screen.findByText("Signed in. Staffing actions are not available for this account.")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Operations" })).toBeInTheDocument();
+    expect(await screen.findByTestId("admin-dashboard-shift-table")).toBeInTheDocument();
+    expect(screen.getAllByTestId("admin-shift-status-badge").map((badge) => badge.textContent)).toEqual(["open", "filled", "open"]);
+    expect(screen.getByText("Open 2")).toBeInTheDocument();
+    expect(screen.getByText("Filled 1")).toBeInTheDocument();
+    expect(screen.getByText("Metro Care Partners")).toBeInTheDocument();
+    expect(screen.getByText("No audit events yet.")).toBeInTheDocument();
+    expect(screen.getByTestId("timesheet-table")).toHaveTextContent("12h");
+    expect(screen.getByText(/not verified work or payable hours/)).toBeInTheDocument();
     expect(screen.queryByTestId("agency-post-shift-button")).not.toBeInTheDocument();
     expect(screen.queryByTestId("shift-claim-button")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("credential-upload-input")).not.toBeInTheDocument();
+  });
+
+  it("shows the nurse credential form and keeps an expired upload from looking eligible", async () => {
+    installFetch((url, init) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+      if (url.endsWith("/api/credentials") && init?.method === "POST") {
+        return jsonResponse({
+          credential: {
+            expiresOn: "2020-01-01",
+            documentName: "license.pdf",
+            mimeType: "application/pdf",
+            sizeBytes: 5,
+            uploadedAt: "2026-10-15T12:00:00.000Z",
+          },
+          status: "expired",
+        });
+      }
+      if (url.endsWith("/api/credentials")) {
+        return jsonResponse({
+          credential: {
+            expiresOn: "2027-01-01",
+            documentName: null,
+            mimeType: null,
+            sizeBytes: null,
+            uploadedAt: null,
+          },
+          status: "valid",
+        });
+      }
+      return jsonResponse({ shifts: trialShifts });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findByTestId("credential-upload-input")).toBeInTheDocument();
+    expect(screen.getByTestId("credential-expiry-date-input")).toBeInTheDocument();
+    expect(await screen.findByText("Eligible through 2027-01-01. No document has been uploaded.")).toBeInTheDocument();
+
+    const file = new File(["%PDF-"], "license.pdf", { type: "application/pdf" });
+    fireEvent.change(screen.getByTestId("credential-upload-input"), { target: { files: [file] } });
+    fireEvent.change(screen.getByTestId("credential-expiry-date-input"), { target: { value: "2020-01-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
+    expect(await screen.findByText("Credential saved. It is expired and cannot be used to claim a shift.")).toBeInTheDocument();
+    expect(screen.getByText("Expired on 2020-01-01. This credential cannot be used to claim a shift.")).toBeInTheDocument();
+    const post = calls("/api/credentials").find((init) => init?.method === "POST");
+    expect(post?.body).toBeInstanceOf(FormData);
+    expect(post?.headers && "Content-Type" in (post.headers as object)).toBe(false);
   });
 });

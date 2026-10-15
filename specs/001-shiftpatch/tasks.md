@@ -47,3 +47,7 @@ Parent T02–T06 are planned in [004-auth-rbac-api/tasks.md](../004-auth-rbac-ap
 ## Core experience planning (2026-10-15)
 
 The nurse/agency portion of T07 is planned in [005-core-user-experience/tasks.md](../005-core-user-experience/tasks.md): login, marketplace, claims, own-agency listing/create/cancel, nine required test IDs and browser E2E coverage. Implementation remains pending for this UI feature. Parent Q04 and the six deferred-module test IDs are outside this epic and do not block its defined screens. Feature 004 now contains API implementation and recorded hosted outcomes in its execution log despite older pending labels; verify its remaining limits before UI integration. No historical results have been reclassified as newly executed checks.
+
+## Credential and administrative planning (2026-10-15)
+
+The remaining credential/admin portion of T07 and parent Q04 are specified in [006-credentials-admin/spec.md](../006-credentials-admin/spec.md), with implementation tasks in [006-credentials-admin/tasks.md](../006-credentials-admin/tasks.md). P0 covers private upload, metadata/status, existing server-side eligibility and the global admin dashboard/metrics. P1 is persistent shift audit; P2 is an optional scheduled-hours preview. The six remaining test IDs are mapped to their actual delivery increments. This is planning only. Feature 005 now records implemented UI and pending E2E/build limits; the earlier planning entry above remains historical.
