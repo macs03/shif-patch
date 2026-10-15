@@ -1,37 +1,67 @@
 # ShiftPatch
 
-Next.js 16.4.1 App Router + TypeScript. The MVP includes Supabase authentication, role-scoped shift APIs, nurse/agency screens, credentials and a read-only admin overview. CI and browser E2E closure are planned in `specs/007-ci-e2e/`; Vercel/deployment is deferred.
+ShiftPatch is a staffing marketplace. Nurses see shifts from both agencies and claim an open one when their credential is still valid. Each agency publishes and reopens only its own shifts. An admin can read every shift, the audit log and a scheduled-hours preview. Credential documents stay private.
 
-## Development
+The app is Next.js 16.4.1 on the App Router, with TypeScript, Zod and Supabase Auth. Protected requests are authorized on the server. The browser does not receive database secrets.
 
-Use Node 24 (`nvm use`) and `npm ci`, then `npm run dev`.
+This repository does not deploy the app. GitHub Actions runs quality checks only and does not connect to Supabase.
+
+## Run locally
+
+Node 24 is required.
 
 ```sh
-npm run typecheck
-npm run lint
-npm run build
+npm ci
+cp .env.example .env.local
+npm run dev
 ```
 
-Copy `.env.example` to `.env.local` when configuring the backend. Never commit real database URLs, JWT secrets or raw AI captures. All runtime credentials stay server-only.
+`.env.local` needs `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`. Keep both server-only: do not use a `NEXT_PUBLIC_` prefix, and do not commit real values.
 
-## Supabase trial database
+The five trial accounts use the published password `Trial2026!`. The database stores a hash of that password.
 
-Manage the database directly in a dedicated Supabase project. For now the repository keeps only SQL migrations under `db/migrations/`; apply them in order in the Supabase SQL Editor:
+| Role | Email |
+| --- | --- |
+| Agency, Sunrise Health Staffing | `admin@sunrisehealth.example` |
+| Agency, Metro Care Partners | `admin@metrocare.example` |
+| Nurse | `maria.lopez@example.com` |
+| Nurse, credential expired | `james.cook@example.com` |
+| Admin | `alex.kim@example.com` |
 
-1. `001_initial.sql`: private schema, tables, constraints and RLS. Apply once on a fresh database.
-2. `002_trial_seed.sql`: the two agencies, two nurses, one admin and three exact shifts. Stores only bcrypt password hashes; published trial password is `Trial2026!`.
-3. Continue with migrations `003` through `009` in filename order for server/API access, Auth identity mapping/permissions, private credentials and audit. Review the relevant feature plans before application; fixture Auth account provisioning/mapping also requires the process in `specs/004-auth-rbac-api/plan.md`. Do not replay already applied migrations blindly.
+## Scripts
 
-Record which migrations were applied in the feature tasks.md. The fixture migration upserts the trial IDs and restores their baseline values if re-executed; it does not delete unrelated rows. Use only a dedicated trial database. Hosted setup and subsequent migration/manual checks are recorded in features 002, 004 and 006. The demo nurse-1 credential expiry was changed during an upload test; the seed file remains unchanged. A separate CI backend is proposed but has not been provisioned.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Local application |
+| `npm run typecheck` | Generate route types, then typecheck |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build |
+| `npm run start` | Serve that build |
+| `npm test -- --selectProjects unit --selectProjects ui --runInBand` | Unit and UI tests, without a backend |
+| `npm run test:integration` | API tests against the configured Supabase project |
 
-There are no local database runners or one-off utilities. See `specs/001-shiftpatch/plan.md`, `AGENTS.md`, and `specs/CONSTITUTION.md` for architecture and manual transcript preservation.
+Integration tests skip when `SUPABASE_URL` or `SUPABASE_PUBLISHABLE_KEY` is missing. Tests that create or change shifts also require `DB_PASSWORD` and `SHIFT_PATCH_HOSTED_MUTATIONS=1`. A skipped run is not a pass. These tests are local; the quality workflow does not run them.
 
-## Spec-driven development and guides
+## Database
 
-Start with `specs/README.md` and `specs/001-shiftpatch/`: requirements, plan, tasks and actual verification evidence. The feature plan includes architecture and guidance for Hallmark, Supabase, the existing Ponytail setup and installed Next.js. Skill sources/checksums are recorded in `.agents/skills-lock.json`. Project documentation is written in English; original evidence keeps its source language.
+Apply the files in `db/migrations/` in filename order in the SQL editor of a dedicated Supabase project.
 
-## Verification status
+1. `001_initial.sql` once, on a fresh database.
+2. `002_trial_seed.sql` for the two agencies, five users and three shifts.
+3. `003` through `009` for API access, Auth mapping, permissions, private credentials and audit.
 
-Run `npm test -- --selectProjects unit ui --runInBand` for backend-independent unit/UI checks. Hosted integration tests currently need server configuration and mutation opt-in; they can skip when configuration is absent. A skipped run is not hosted verification. The strict CI mode and Playwright scripts described in `specs/007-ci-e2e/plan.md` are planned, not available commands yet.
+Create the five Auth users in the Supabase dashboard before `006_auth_fixture_mapping.sql`. That migration links them by email and stops if the mapping is incomplete. The sequence is described in `specs/004-auth-rbac-api/plan.md`.
 
-The latest local review passed 38 tests across six unit/UI suites, typecheck and lint on Node 22.20.0. A Node 24 build, browser E2E and actual GitHub CI runs remain pending. See `specs/005-core-user-experience/tasks.md` and `specs/007-ci-e2e/tasks.md`; historical hosted results remain separate from new execution.
+Do not replay a migration that has already been applied. Running `002` again restores the fixture rows and does not delete unrelated data. An upload test changed the hosted expiry for nurse-1; the seed file was left unchanged.
+
+There is no local database runner and no `scripts/` directory.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual dispatch. On Node 24 it installs dependencies, then runs lint, typecheck, the unit and UI tests, and the production build. The job can read the repository and does not receive backend credentials.
+
+Connecting that workflow to a live backend, browser end-to-end tests and Vercel are outside this project.
+
+## Specifications
+
+Behavior, decisions and recorded checks live in `specs/`. Start with `specs/README.md` and `specs/CONSTITUTION.md`. Those documents are in English. Original transcripts stay private, in their source language.
