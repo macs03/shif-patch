@@ -32,5 +32,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [002-supabase-initial-data/spec.md](002-supabase-initial-data/spec.md): first hosted fixture load and private Next.js connection.
 - [003-test-harness/spec.md](003-test-harness/spec.md): Jest, React Testing Library and Zod test harness.
 - [004-auth-rbac-api/spec.md](004-auth-rbac-api/spec.md): planned Supabase Auth, server/database authorization and six REST API contracts.
+- [005-core-user-experience/spec.md](005-core-user-experience/spec.md): planned login, nurse marketplace, agency management and critical browser workflows on the existing API.
 
-Next work item: implement parent login and API routes through the 004-auth-rbac-api task sequence when requested. Cancellation and credential expiry decisions are resolved there.
+Next UI work item: follow 005-core-user-experience after checking current API readiness. Feature 004 has implementation and hosted results in its execution log, with remaining verification limits; its pending task labels do not mean the code is absent. Cancellation and credential expiry decisions are resolved there.

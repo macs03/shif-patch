@@ -43,3 +43,7 @@ Hosted setup and verification for parent T01 are recorded in [002-supabase-initi
 ## Authentication and API planning (2026-10-15)
 
 Parent T02–T06 are planned in [004-auth-rbac-api/tasks.md](../004-auth-rbac-api/tasks.md) using Supabase Auth and database authorization, explicitly requested by the user. Implementation remains pending. Cancellation permissions and inclusive America/Bogota credential expiry are resolved by user replies; the feature defines remaining API error decisions, migration of the privileged read helper and automated contract/security verification. Older Q01–Q03 dependency labels in the task table describe their original state and are superseded by these decisions. Historical baseline evidence above is unchanged.
+
+## Core experience planning (2026-10-15)
+
+The nurse/agency portion of T07 is planned in [005-core-user-experience/tasks.md](../005-core-user-experience/tasks.md): login, marketplace, claims, own-agency listing/create/cancel, nine required test IDs and browser E2E coverage. Implementation remains pending for this UI feature. Parent Q04 and the six deferred-module test IDs are outside this epic and do not block its defined screens. Feature 004 now contains API implementation and recorded hosted outcomes in its execution log despite older pending labels; verify its remaining limits before UI integration. No historical results have been reclassified as newly executed checks.
