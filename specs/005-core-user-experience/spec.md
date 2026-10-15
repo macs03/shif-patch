@@ -1,6 +1,6 @@
 # Core User Experience — Specification
 
-Feature ID: 005-core-user-experience · Date: 2026-10-15 · Status: Planned; implementation pending
+Feature ID: 005-core-user-experience · Date: 2026-10-15 · Status: Implemented in the application; browser E2E runner still pending dependency approval
 
 Source: user's main ShiftPatch experience epic, including nurse marketplace, agency management, lifecycle, nine test IDs and critical E2E tests. Parent: [001-shiftpatch/spec.md](../001-shiftpatch/spec.md), R03–R10. API dependency: [004-auth-rbac-api/spec.md](../004-auth-rbac-api/spec.md). Applicable constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
 
@@ -14,7 +14,7 @@ Included: login interface, role-specific nurse marketplace and agency dashboard,
 
 Excluded: recommendations, automatic matching, push/email notifications, advanced scheduling, registration, password recovery, token refresh, credential uploads, audit logs, timesheets, a new admin dashboard, nurse cancellation UI, new API endpoints and deployment. Existing API cancellation rights for a claiming nurse remain unchanged. The six additional parent test IDs for deferred modules remain parent obligations; this epic implements the nine listed below.
 
-This request delivers planning documents only; application implementation and dependency installation are future work.
+Application implementation is in scope. Installing Playwright still requires explicit dependency approval.
 
 ## Requirements
 
@@ -90,3 +90,4 @@ Login, nurse marketplace, agency dashboard, create form, claim/cancel flows and 
 | Date | Change | Source |
 | --- | --- | --- |
 | 2026-10-15 | Initial specification | User's core experience epic and existing API contracts |
+| 2026-10-15 | Implementation requested; Playwright install remains gated | User asked to implement this specification |

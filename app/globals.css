@@ -1,26 +1,320 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-paper: oklch(96.8% 0.012 95);
+  --color-paper-2: oklch(93.5% 0.018 95);
+  --color-ink: oklch(24% 0.028 250);
+  --color-muted: oklch(44% 0.02 250);
+  --color-rule: oklch(78% 0.02 95);
+  --color-accent: oklch(36% 0.07 205);
+  --color-accent-ink: oklch(98% 0.01 95);
+  --color-focus: oklch(46% 0.14 255);
+  --color-danger: oklch(40% 0.14 25);
+  --color-danger-bg: oklch(95% 0.03 25);
+  --color-ok: oklch(34% 0.07 165);
+  --color-ok-bg: oklch(94% 0.035 165);
+  --font-display: var(--font-geist-sans), sans-serif;
+  --font-body: var(--font-geist-sans), sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  overflow-x: clip;
+  min-width: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.shell {
+  width: min(40rem, 100%);
+  margin-inline: auto;
+  padding: 1.25rem 1rem 3rem;
+  min-width: 0;
+}
+
+.mast h1,
+.board h2,
+.card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.mark {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.mast-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.lede,
+.role-line,
+.scope-note,
+.state-line,
+.card-agency,
+.card-when,
+.assignee {
+  color: var(--color-muted);
+}
+
+.role-line {
+  margin: 0.25rem 0 0;
+  text-transform: capitalize;
+}
+
+.banner {
+  min-height: 0;
+  margin: 1rem 0;
+}
+
+.banner p {
+  margin: 0;
+}
+
+.banner-success,
+.banner-error {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-rule);
+}
+
+.banner-success {
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+
+.banner-error {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.banner-kicker {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login,
+.create-form,
+.cancel-form,
+.card,
+.state-block {
+  min-width: 0;
+}
+
+.login,
+.create-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field label,
+.cancel-form label {
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.cancel-form select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+}
+
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"] {
+  background: var(--color-danger-bg);
+}
+
+.field p,
+.field-error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+.btn {
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+@media (hover: hover) {
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.board {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.board-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 0 0.9rem 0.85rem;
+  border-top: 1px solid var(--color-rule);
+  border-left: 3px solid var(--color-accent);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.card-head p,
+.card-when,
+.assignee,
+.scope-note {
+  margin: 0;
+}
+
+.card h3 {
+  font-size: 1.35rem;
+}
+
+.card-when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.status {
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.status-open {
+  color: var(--color-accent);
+}
+
+.status-filled {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.overnight {
+  color: var(--color-ink);
+  font-weight: 650;
+}
+
+.cancel-form {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.cancel-form label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+@media (min-width: 40rem) {
+  .shell {
+    padding-top: 2rem;
+  }
+
+  .cancel-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn:hover,
+  .btn:active {
+    transform: none;
+    transition: none;
+  }
 }

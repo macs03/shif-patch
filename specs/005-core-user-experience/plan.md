@@ -1,6 +1,6 @@
 # Core User Experience — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: Planned; implementation pending
+Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: UI implemented; Playwright E2E still pending approval
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Parent work: 001-shiftpatch/T07. API implementation/evidence: [004-auth-rbac-api/tasks.md](../004-auth-rbac-api/tasks.md). Harness: 003-test-harness.
 
