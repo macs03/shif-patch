@@ -2,7 +2,7 @@
 
 Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-14
 
-Specification and plan are approved. Baseline migrations and server read grants are applied. The Supabase server helper is in the repo. The hosted read is waiting on the server secret key and on exposing the shiftpatch schema in the Data API.
+Specification and plan are approved. The hosted database has the baseline and the server helper reads the three shifts through the Data API. An anon-key HTTP request was not run because that key is not in the private env.
 
 ## Tasks
 
@@ -10,9 +10,9 @@ Specification and plan are approved. Baseline migrations and server read grants 
 | --- | --- | --- | --- | --- | --- |
 | T01 | R01 / AC01 | Identify the existing project and inspect migration state; record only non-secret identity | Q01,Q02 target access | Complete | Confirm dedicated target, current schema and applied migrations |
 | T02 | R02,R03,R04 / AC02–AC05 | Apply missing 001/002 migrations in Supabase; verify exact data, bcrypt, constraints and fixture repeatability | T01 | Complete | Hosted 2/5/2/3 counts, all values, correct/wrong passwords, RLS and non-destructive fixture repetition |
-| T03 | R06 / AC08–AC09 | Prepare/apply 003_server_read_access.sql; expose shiftpatch to the Data API; verify service_role grants and browser denial | T01,T02,Q02 | SQL verified; Data API exposure pending | Server SELECT works on agencies/shifts; user/hash reads, writes and anon/authenticated access denied |
-| T04 | R05 / AC06–AC07 | Implement lib/server/db.ts with @supabase/supabase-js and placeholder config; verify the hosted read | T02,T03,Q02 | Code ready; hosted read pending | Actual helper reads all three exact shifts through the reused server client over HTTPS |
-| T05 | R07,R08 / AC10–AC12 | Check safe bounded failures, type/lint, environment permitting build, and record completion evidence | T04 | Local checks passed; hosted read pending | No secret leaks, real check outcomes, native transcript status and accurate parent task update |
+| T03 | R06 / AC08–AC09 | Prepare/apply 003_server_read_access.sql and 004_expose_shiftpatch_api.sql; verify service_role grants and browser denial | T01,T02,Q02 | Grants verified; anon-key HTTP pending | Server SELECT works on agencies/shifts; user/hash reads, writes and anon/authenticated access denied |
+| T04 | R05 / AC06–AC07 | Implement lib/server/db.ts with @supabase/supabase-js and placeholder config; verify the hosted read | T02,T03,Q02 | Complete | Actual helper reads all three exact shifts through the reused server client over HTTPS |
+| T05 | R07,R08 / AC10–AC12 | Check safe bounded failures, type/lint, environment permitting build, and record completion evidence | T04 | Local checks passed; anon-key HTTP pending | No secret leaks, real check outcomes, native transcript status and accurate parent task update |
 
 ## Coverage
 
@@ -23,13 +23,13 @@ Specification and plan are approved. Baseline migrations and server read grants 
 | AC03 | T02 | Hosted counts 2/5/2/3 and the fixture fields matched the spec. Hashes were not printed |
 | AC04 | T02 | A probe agency survived 002 and agency-a was restored. The probe was then deleted so the baseline stayed 2/5/2/3 |
 | AC05 | T02 | Trial2026! matched all five hashes. A wrong password matched none. No plaintext password is stored |
-| AC06 | T04 | Helper is implemented. Hosted read is pending the server secret key and Data API exposure of shiftpatch |
-| AC07 | T04 | Client reuses one server instance, sets a 10s timeout and does not disable TLS. Hosted identity check is pending the secret key |
+| AC06 | T04 | readShifts() returned shift-1, shift-2 and shift-3 with the spec agency names, dates, HH:mm times, open/filled status and claimedBy null or nurse-1 |
+| AC07 | T04 | The read used the project HTTPS API and the server secret key. The users request was denied as service_role. TLS verification was not disabled |
 | AC08 | T03 | service_role can select agencies and shifts, cannot select users or insert, and bypasses RLS. anon and authenticated have no usage |
-| AC09 | T03 | SQL roles anon and authenticated are denied. Unauthenticated Data API returns 401. A real anon-key request and exposed-schema check remain pending |
+| AC09 | T03 | shiftpatch is exposed. SQL roles anon and authenticated are denied. Data API without a key returns 401, and service_role receives 403 on users. An anon-key request was not run |
 | AC10 | T05 | Missing, blank, http, userinfo and spaced config throw "Supabase server configuration is invalid" with no secret in the message |
 | AC11 | T05 | Invalid key returned "Shift read failed" in 608ms. With retries disabled, a bad certificate returned the same message in 492ms. Hosted success is not claimed |
-| AC12 | T05 | typecheck, lint and build passed on Node v22.20.0. Parent baseline stays pending because AC06 is open. Native export is pending |
+| AC12 | T05 | typecheck, lint and build passed on Node v22.20.0. Parent T01 now records the hosted baseline. Native export is pending |
 
 ## Execution log
 
@@ -61,6 +61,14 @@ Specification and plan are approved. Baseline migrations and server read grants 
 - service_role is not superuser, bypasses RLS, and can select the two agencies and three shifts. Selecting users and inserting a shift were denied. anon and authenticated lack schema usage and were denied. authenticator has no pgrst.db_schemas setting, so shiftpatch is not exposed to the Data API yet.
 - npm run typecheck, npm run lint and npm run build passed. Node is v22.20.0 while package engines ask for 24; npm warned EBADENGINE and the build still completed. No page imports the helper, so the browser flow was not exercised.
 - SUPABASE_SECRET_KEY is not in the private env files. Hosted readShifts was not run. Parent 001 baseline was not marked complete.
+- Native conversation is the original evidence. Post-turn private export is pending; this entry is a summary.
+
+### 2026-10-14 — Hosted read
+
+- Criteria: AC06 and AC07 passed. AC09 gained Data API exposure and a service_role denial on users. The anon-key request remains pending.
+- Files: db/migrations/004_expose_shiftpatch_api.sql, spec.md, tasks.md, and the parent tasks.md status for T01.
+- The owner had stored SUPABASE_URL and SUPABASE_SECRET_KEY in .env.local. The first helper call failed because only public and graphql_public were exposed. Applied 004, which sets those schemas plus shiftpatch and reloads the API cache.
+- readShifts() then returned the three exact Shift objects. A Data API read of shiftpatch.users with the server key returned 403. No secret was printed.
 - Native conversation is the original evidence. Post-turn private export is pending; this entry is a summary.
 
 Future entries must record date/task, criteria, changed files, executed checks, actual outcomes and private native-evidence completeness. Do not create custom scripts or a documentation directory.

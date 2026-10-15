@@ -4,7 +4,7 @@ Completed first-session work is a baseline that predates this SDD configuration;
 
 | Task | Requirements | Status | Evidence / completion condition |
 | --- | --- | --- | --- |
-| T01 Data model and fixtures | R01,R02 | Baseline implemented; hosted verification pending | Historical embedded checks passed for fixtures, bcrypt, relations, reset/repetition and RLS. Utilities were removed. Original session and historical summary archived privately outside the repository |
+| T01 Data model and fixtures | R01,R02 | Hosted baseline verified | Historical embedded checks passed for fixtures, bcrypt, relations, reset/repetition and RLS. Hosted counts, values and the server read are recorded in 002-supabase-initial-data. Utilities were removed. Original session and historical summary archived privately outside the repository |
 | T02 Login and JWT | R03,R09 | Pending | Verify all five logins, 401 contract and invalid/expired token handling; never return hashes |
 | T03 List and create shifts | R04,R05,R09 | Pending | Exact list and agencyId derived from token; prevent creation by other roles |
 | T04 Claim | R06,R09 | Pending; resolve Q02,Q03 | Reject expired credential, accept valid claim, prevent double assignment under concurrency |
@@ -38,4 +38,4 @@ Historical skills checks confirmed all 107 Hallmark and 36 Supabase files matche
 
 Cleanup verification: thirteen local links valid, no obsolete project-documentation references, installed skill hashes intact, all eight private archive files matched their checksums, constitution/plan versions consistent and git diff --check passed. The first inline cleanup command had a syntax error before any mutation; it was corrected and the cleanup completed. No application tests were rerun for this documentation/configuration-only change.
 
-Hosted setup and verification for parent T01 are now tracked by [002-supabase-initial-data/tasks.md](../002-supabase-initial-data/tasks.md). Creating that feature specification does not complete the hosted baseline.
+Hosted setup and verification for parent T01 are recorded in [002-supabase-initial-data/tasks.md](../002-supabase-initial-data/tasks.md). The hosted baseline and server read passed on 2026-10-14.

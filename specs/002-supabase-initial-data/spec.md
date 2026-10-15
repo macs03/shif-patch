@@ -73,7 +73,7 @@ Agency records use the corresponding IDs/names above. Credential rows belong to 
 | ID | Question / assumption | Affected criteria | Resolution / source |
 | --- | --- | --- | --- |
 | Q01 | Which exact project is the target, and are migrations already applied? | AC01–AC05, AC08–AC09 | Resolved 2026-10-14: project ref yalgrpojxhlaihouylta. Schema was absent. Migrations 001, 002 and 003 were applied. Direct database host is IPv6-only and unreachable from this machine; admin SQL used the session pooler in ca-central-1 |
-| Q02 | How will the owner provision the server secret key privately, and is the Data API reachable? | AC06–AC11 | Use SUPABASE_URL plus a server-only secret key in private env. Never request the key in chat. Direct Postgres credentials are not the application connection |
+| Q02 | How will the owner provision the server secret key privately, and is the Data API reachable? | AC06–AC11 | Resolved 2026-10-14: the owner stored the server secret key in private env. The Data API is reachable and shiftpatch is exposed beside public and graphql_public |
 | Q03 | Is the Supabase client library explicitly authorized? | AC06–AC11 | Resolved 2026-10-14: the user required @supabase/supabase-js and rejected a direct Postgres driver |
 
 Assumption: use the existing private shiftpatch schema and database fixture users, not Supabase Auth. The server client uses the Data API as service_role. Resolve operational prerequisites before their dependent tasks.
