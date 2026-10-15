@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ShiftPatch
 
-## Getting Started
+Next.js 16.4.1 App Router + TypeScript. Session 1 establishes the data and agent workflow; business endpoints and screens come next.
 
-First, run the development server:
+## Development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Use Node 24 (`nvm use`) and `npm ci`, then `npm run dev`.
+
+```sh
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` when configuring the backend. Never commit real database URLs, JWT secrets or raw AI captures. All runtime credentials stay server-only.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase trial database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Manage the database directly in a dedicated Supabase project. For now the repository keeps only SQL migrations under `db/migrations/`; apply them in order in the Supabase SQL Editor:
 
-## Learn More
+1. `001_initial.sql`: private schema, tables, constraints and RLS. Apply once on a fresh database.
+2. `002_trial_seed.sql`: the two agencies, two nurses, one admin and three exact shifts. Stores only bcrypt password hashes; published trial password is `Trial2026!`.
 
-To learn more about Next.js, take a look at the following resources:
+Record which migrations were applied in the feature tasks.md. The fixture migration upserts the trial IDs and restores their baseline values if re-executed; it does not delete unrelated rows. Use only a dedicated trial database. No hosted database has been connected or migrated yet.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+There are no local database runners or one-off utilities. See `specs/001-shiftpatch/plan.md`, `AGENTS.md`, and `specs/CONSTITUTION.md` for architecture and manual transcript preservation.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Spec-driven development and guides
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Start with `specs/README.md` and `specs/001-shiftpatch/`: requirements, plan, tasks and actual verification evidence. The feature plan includes architecture and guidance for Hallmark, Supabase, the existing Ponytail setup and installed Next.js. Skill sources/checksums are recorded in `.agents/skills-lock.json`. Project documentation is written in English; original evidence keeps its source language.

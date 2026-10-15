@@ -1,0 +1,39 @@
+---
+description: Secure development — secrets, env vars, auth boundaries, no information leaks.
+globs:
+alwaysApply: true
+---
+
+# Secure development (required)
+
+Read [constitution principle IV](../../specs/CONSTITUTION.md#iv-server-side-security) for project security principles. Checklist — never skip:
+
+## Secrets and environment
+
+- **Never** commit `.env.local`, API keys, tokens, peppers, or service role keys.
+- **Never** prefix server secrets with `NEXT_PUBLIC_` — only values safe in the browser (Supabase URL + anon key with RLS).
+- **Never** pass secrets to Client Components, `use client` modules, or props serialized to the client.
+- Use `import "server-only"` on admin/service modules (`src/lib/supabase/admin.ts`).
+- Document new env vars in `.env.local.example` with **placeholders only** — no real values.
+- Before marking work done: confirm no secret strings leaked into `src/` client code or committed files.
+
+## Trust boundaries
+
+- **Server Actions** and **route handlers** are public endpoints — authenticate and authorize **inside** every one.
+- Validate all external input with **Zod** at the boundary; never trust client-only validation.
+- Layout/middleware guards are **UX only** — not a security control.
+- Every query/mutation scopes by **`organizacion_id`**; verify RLS on new tables.
+- Fetch by ID must confirm the row belongs to the caller's org (no IDOR).
+
+## Information disclosure
+
+- Auth errors stay **generic** (no "user does not exist" vs "wrong password").
+- Do not log passwords, tokens, session objects, cédula plaintext, or clinical notes.
+- Do not return hypersensitive fields to the patient portal or in API responses.
+- Do not expose stack traces, internal paths, or raw DB errors to end users.
+- Do not put PII or secrets in specs, commits, comments, or chat pastes in repo files.
+
+## When in doubt
+
+- Delegate to `org-security` subagent.
+- Add security notes to the feature spec/plan before implementing auth or data-access changes.
