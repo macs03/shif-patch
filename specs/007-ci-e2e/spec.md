@@ -1,17 +1,17 @@
 # Continuous Integration and Browser Verification — Specification
 
-Feature ID: 007-ci-e2e · Date: 2026-10-15 · Status: Planned; implementation not started
+Feature ID: 007-ci-e2e · Date: 2026-10-15 · Status: Quality CI only. Real-backend verification withdrawn
 
 Source: user request to plan CI, automated verification and closure of 005 browser E2E/documentation gaps. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Dependencies: [005](../005-core-user-experience/spec.md), [004](../004-auth-rbac-api/spec.md) and [006](../006-credentials-admin/spec.md).
 
 ## Problem and expected outcome
 
-The MVP has local Jest checks and recorded hosted checks but no repository CI workflows or declared Playwright dependency. Hosted Jest tests can skip when configuration is absent, and the existing race uses two requests from the same nurse. A reproducible pipeline must distinguish local quality, real backend verification and real browser coverage, and fail when required verification was omitted.
+The MVP has local Jest checks and recorded hosted checks but no repository CI workflow for the checks that do not need a backend. The delivery is a reproducible quality pipeline. It does not add a paid or separate Supabase project.
 
 ## Scope
 
-- Included: GitHub Actions quality and hosted verification workflows, Node 24 build, existing Jest suites, Playwright Chromium tests against the production application running locally in the runner, isolated backend data, cleanup, truthful status/evidence and documentation reconciliation.
-- Excluded: Vercel registration/configuration, hosting, preview deployments, production deployment, CD, new business features, broad browser matrices, performance/load testing and arbitrary coverage-percentage targets.
+- Included: the GitHub Actions quality workflow, Node 24, npm ci, lint, typecheck, the existing unit and UI Jest suites, a production build without Supabase credentials, read-only permissions and truthful status.
+- Excluded: a separate or paid Supabase project, hosted integration, Playwright runs, race accounts, GitHub database secrets, Vercel, hosting, preview deployments, production deployment, CD, new business features, broad browser matrices, performance/load testing and coverage-percentage targets.
 - This session delivers specifications, a plan and documentation corrections. It does not install dependencies, create workflows, configure external accounts or execute browser E2E.
 
 ## Requirements and acceptance criteria
@@ -19,11 +19,10 @@ The MVP has local Jest checks and recorded hosted checks but no repository CI wo
 | Requirement | Required behavior | Criteria |
 | --- | --- | --- |
 | R01 | Reproducible quality pipeline without backend secrets | AC01–AC02 |
-| R02 | Hosted integration checks that cannot silently skip | AC03–AC04 |
-| R03 | Real browser verification closing 005/T07 | AC05–AC07 |
-| R04 | Isolated, repeatable data and bounded cleanup | AC08–AC09 |
-| R05 | Safe workflow permissions and useful evidence | AC10–AC11 |
+| R05 | Quality workflow permissions stay read-only | AC10 |
 | R06 | Current documentation and honest delivery status | AC12–AC13 |
+
+R02–R04, AC03–AC09, AC11 and the hosted half of AC13 were withdrawn on 2026-10-15. They required a separate Supabase project. The user excluded that verification because it can cost money. This feature does not close 005/T07.
 
 | Criterion | Given / when | Observable result |
 | --- | --- | --- |
@@ -36,31 +35,32 @@ The MVP has local Jest checks and recorded hosted checks but no repository CI wo
 | AC07 | Regression smoke covers delivered 006 UI | Admin read-only table/counts, non-admin administrative denial and nurse credential form/own metadata render through real application requests; upload/security persistence remains subject to its separate recorded limits |
 | AC08 | Suite sets up, runs and tears down, then runs again | Baseline shift rows, users and credential metadata remain unchanged; generated rows/accounts/objects are identified and cleaned within the isolated test backend; cleanup failure fails the run |
 | AC09 | Hosted runs overlap or a run is interrupted | Shared backend runs serialize without cancelling an active mutation run; next preflight detects stale test data and requires cleanup before proceeding; no broad reseed, table wipe or silent fixture restoration |
-| AC10 | PR from an untrusted fork runs | Quality runs without backend secrets; hosted workflow does not execute fork code with secrets; permissions are read-only except where a specific action requires otherwise |
-| AC11 | Results are recorded | Counts, versions, failed/skipped checks and cleanup outcomes available; no tokens, passwords, documents, raw backend responses or sensitive browser traces in published artifacts |
-| AC12 | Existing feature documentation is reconciled | Current summaries match code and dated evidence; historical logs retained; implemented work and pending verification distinguished; no unsupported completed label |
-| AC13 | Feature closure is proposed | Actual GitHub quality and hosted successes reference tested commits; 005/T07 closes only after AC05–AC06; 005/T08 closes only after its complete checks, including Node 24 build; Vercel remains excluded |
+| AC10 | Pull request, including from an untrusted fork | Quality runs without backend secrets. Permissions are contents:read. No hosted job exists |
+| AC12 | Existing feature documentation is reconciled | Current summaries match code and dated evidence; historical logs retained; the withdrawn backend verification is not described as pending delivery |
+| AC13 | Feature closure is proposed | The quality workflow is the CI delivery. Hosted backend success, 005/T07 and 005/T08 are not required here. Vercel remains excluded |
 
 ## Contracts and data
 
-Preserve the six APIs, all 15 required test IDs, public IDs/emails/names, full Shift fields, local dates/hours, open/claimedBy:null and inclusive America/Bogota expiry. No product endpoint or permission change is planned. Baseline nurse-2 remains expired. Additional race identities must be separate test accounts with eligible credentials.
+Preserve the six APIs, all 15 required test IDs, public IDs/emails/names, full Shift fields, local dates/hours, open/claimedBy:null and inclusive America/Bogota expiry. No product endpoint or permission change is planned. Baseline nurse-2 remains expired. No additional test accounts are created.
 
 ## Questions and assumptions
 
 | ID | Decision or prerequisite | Resolution |
 | --- | --- | --- |
 | Q01 | CI provider | Git remote is GitHub; plan GitHub Actions |
-| Q02 | Browser dependency | Propose @playwright/test plus Chromium only. Explicit dependency approval is required before installation; this planning request does not install it |
-| Q03 | Hosted backend and access | Prefer a separate dedicated CI Supabase project, never a production/demo backend shared with manual use. Project availability, identity provisioning, database cleanup connectivity and GitHub secrets remain unverified prerequisites |
-| Q04 | Backend mutation isolation | Keep fixture accounts unchanged; provision two additional eligible nurses and disposable shifts in the CI project. Define setup/cleanup before enabling hosted runs |
+| Q02 | Browser dependency | Withdrawn with the browser suite. `@playwright/test` is not a project dependency |
+| Q03 | Hosted backend and access | Withdrawn. A separate Supabase project is out of scope because it can cost money |
+| Q04 | Backend mutation isolation | Withdrawn with Q03. CI does not create race accounts or disposable shifts |
 | Q05 | Hosting | Explicitly excluded by the user until a later Vercel phase |
 
 ## Delivery condition
 
-All AC01–AC13 require actual evidence. A written workflow is not a successful CI run, a skipped integration suite is not verification, and existing same-nurse concurrency evidence does not satisfy the two-nurse browser race. Pending dependency/account access affects only dependent implementation tasks. No commit, push, publication or external setting change is part of this planning session.
+AC01, AC02, AC10, AC12 and AC13 are the remaining delivery. A written workflow is not a successful GitHub run. Withdrawn criteria are not pending work. No commit, push or external setting change is required to record this scope change.
 
 ## Change history
 
 | Date | Change | Source |
 | --- | --- | --- |
 | 2026-10-15 | Initial plan; Vercel excluded | User request and repository review |
+| 2026-10-15 | Quality and hosted workflows, strict integration gate and Playwright suite added. Hosted runs, GitHub execution and 005/T07 remain pending | User request to implement this spec |
+| 2026-10-15 | Real-backend verification withdrawn, including the separate Supabase project, hosted tests and browser E2E. Quality CI remains | User excluded it because it can cost money |

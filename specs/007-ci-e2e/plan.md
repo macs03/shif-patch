@@ -1,6 +1,6 @@
 # Continuous Integration and Browser Verification — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: Ready for implementation after listed prerequisites
+Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: Quality workflow remains. Hosted backend verification, the separate Supabase project and browser E2E are withdrawn. The sections below that describe them are historical design, not current work.
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
 
@@ -10,9 +10,13 @@ Use two GitHub Actions workflows and the installed Jest/RTL/Zod stack. Add only 
 
 ### Quality workflow: .github/workflows/ci.yml
 
-Trigger on pull_request, push to main and workflow_dispatch. No path filters initially, so documentation PRs still receive the same required check. Use permissions contents:read, pinned reviewed action revisions, a bounded timeout and per-ref concurrency with cancellation of superseded quality runs. Run npm ci, npm run lint, npm run typecheck, npm test -- --selectProjects unit ui --runInBand, then npm run build. Type generation runs before TypeScript; avoid concurrent type generation and build on the same checkout. Fail on any command error. Build should succeed without live backend credentials; test that explicitly. Account for next/font/google requiring outbound access during the build; record network failures rather than silently changing fonts.
+Trigger on pull_request, push to main and workflow_dispatch. No path filters initially, so documentation PRs still receive the same required check. Use permissions contents:read, pinned reviewed action revisions, a bounded timeout and per-ref concurrency with cancellation of superseded quality runs. Run npm ci, npm run lint, npm run typecheck, npm test -- --selectProjects unit --selectProjects ui --runInBand, then npm run build. Jest accepts one project name per --selectProjects flag. Type generation runs before TypeScript; avoid concurrent type generation and build on the same checkout. Fail on any command error. Build should succeed without live backend credentials; test that explicitly. Account for next/font/google requiring outbound access during the build; record network failures rather than silently changing fonts.
 
-### Hosted workflow: .github/workflows/verify-hosted.yml
+### Hosted workflow: withdrawn
+
+The user excluded this workflow on 2026-10-15 because a separate Supabase project can cost money. `.github/workflows/verify-hosted.yml` is not part of the delivery. The historical design was:
+
+### Historical hosted workflow: .github/workflows/verify-hosted.yml
 
 Trigger on push to main and workflow_dispatch for the trusted main ref only. Run its own quality prerequisites on the exact checked-out commit, then hosted Jest integration, then browser tests against that commit's production build. Never use pull_request_target or execute an untrusted PR ref with backend secrets. Name the check distinctly from PR quality; it is a trusted-main verification, not a required PR check that never runs on PRs.
 

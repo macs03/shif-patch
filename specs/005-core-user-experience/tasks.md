@@ -60,6 +60,6 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 
 ## Current closure plan (2026-10-15)
 
-T01–T06 remain completed for their recorded UI scope; T07 and T08 remain pending. [007-ci-e2e/tasks.md](../007-ci-e2e/tasks.md) now tracks their remaining verification: T02 isolated backend/two eligible identities, T03 strict hosted checks, T04 real Chromium flows/race and T06 final Node 24 delivery checks. Hosted handler checks from 004 do not replace browser E2E. The second baseline nurse must remain expired. Admin/credentials now exist under 006; the earlier UI-session admin scope message is historical.
+T01–T06 remain completed for their recorded UI scope; T07 and T08 remain pending. On 2026-10-15 the user withdrew real-backend and browser CI from [007-ci-e2e](../007-ci-e2e/spec.md) because a separate Supabase project can cost money. 007 no longer carries T07. Hosted handler checks from 004 do not replace browser E2E. The second baseline nurse must remain expired. Admin/credentials now exist under 006; the earlier UI-session admin scope message is historical.
 
 The immediately preceding Codex review reran unit/UI: 6 suites, 38 tests passed, plus typecheck and lint on Node 22.20.0. No hosted tests, browser E2E or Node 24 build were rerun. This follow-up is documentation/planning only, with no dependency installation. Vercel/deployment is explicitly deferred by the user. Current-turn documentation check outcomes are recorded in 007/T00; private complete native export remains pending.
