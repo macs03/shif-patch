@@ -15,7 +15,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | T06 | R08 / AC18 | Complete API role matrix, live token/RLS checks, opt-in mutation setup, races and HTTP routing smoke | T04, T05 | Pending | Six contracts, bypass denial, concurrent transitions and stable fixtures |
 | T07 | R08 / AC19 | Application checks, diff/security review, evidence and parent task references | T06 | Pending | Actual tests, typecheck/lint, Node 24 build and hosted evidence; limits recorded |
 
-T00 is documentation delivery. All implementation tasks remain pending; this plan does not implement an account, permission or route.
+T00 is documentation delivery. Implementation and hosted checks through 2026-10-15 are in the execution log. Public signup disable and a Node 24 build remain open, so T01–T07 stay pending.
 
 ## Coverage
 
@@ -47,3 +47,10 @@ T00 is documentation delivery. All implementation tasks remain pending; this pla
 - Application tests, typecheck/lint, build and hosted checks not run: documentation-only scope; no implementation claimed.
 - Evidence: native conversation contains prompts and tool calls/results. Complete private post-turn export pending; this summary does not replace or claim a complete transcript. No shared transcript copy/redaction performed; no environment values read or copied.
 - Status: T00 completed; T01–T07 pending. Next step when implementation is requested: inspect hosted Auth settings and implement the fixture identity migration/provisioning sequence. No commits or publication performed.
+
+### 2026-10-15 — Application checks and hosted route contracts
+
+- `npm run typecheck` and `npm run lint` passed. `npm run build` passed on Node v22.20.0 (package engines ask for Node 24). The build listed the six API routes as dynamic. No EBADENGINE line appeared in that build log.
+- The publishable value in `.env.local` was stored as `SUPABASE_SERVICE_ROLE_KEY`. It was renamed to `SUPABASE_PUBLISHABLE_KEY`. No secret values were printed.
+- Hosted Jest, with `SHIFT_PATCH_HOSTED_MUTATIONS=1`: `auth-api`, `read-shifts` and `auth-mutations` — 3 suites, 4 tests, all passed. The user reran `SHIFT_PATCH_HOSTED_MUTATIONS=1 npm run test:integration` locally with the same result (3 suites, 4 tests, about 23.8 s). Five logins, wrong and unknown credentials, a tampered bearer token, cross-agency denial, nurse/admin create denial, nurse-2 credential denial, both cancellation reasons, and two concurrent claims (200 and 409). The created shift was deleted and the three fixture shifts matched afterward.
+- Public signup was still enabled when last read from Auth settings. On 2026-10-15 the user showed the dashboard with "Allow new users to sign up" off and Email still enabled. That setting was not re-read from the Auth API after the screenshot. Node 24 was not available for the build. No commit.

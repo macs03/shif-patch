@@ -1,5 +1,8 @@
 import {
   apiErrorSchema,
+  cancelShiftRequestSchema,
+  claimShiftRequestSchema,
+  createShiftRequestSchema,
   loginRequestSchema,
   loginResponseSchema,
   shiftSchema,
@@ -42,5 +45,64 @@ describe("packet schemas", () => {
     expect(apiErrorSchema.parse({ error: "Invalid email or password" }).error).toBe(
       "Invalid email or password",
     );
+  });
+
+  it("rejects unknown login fields and accepts fixture emails", () => {
+    expect(
+      loginRequestSchema.safeParse({
+        email: "maria.lopez@example.com",
+        password: "Trial2026!",
+        role: "admin",
+      }).success,
+    ).toBe(false);
+    expect(
+      loginRequestSchema.safeParse({
+        email: "admin@sunrisehealth.example",
+        password: "Trial2026!",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects impossible dates, equal times and unknown create fields", () => {
+    expect(
+      createShiftRequestSchema.safeParse({
+        role: "RN",
+        date: "2026-02-31",
+        startTime: "19:00",
+        endTime: "07:00",
+      }).success,
+    ).toBe(false);
+    expect(
+      createShiftRequestSchema.safeParse({
+        role: "RN",
+        date: "2026-10-16",
+        startTime: "07:00",
+        endTime: "07:00",
+      }).success,
+    ).toBe(false);
+    expect(
+      createShiftRequestSchema.safeParse({
+        role: "RN",
+        date: "2026-10-16",
+        startTime: "19:00",
+        endTime: "07:00",
+        agencyId: "agency-b",
+      }).success,
+    ).toBe(false);
+    expect(
+      createShiftRequestSchema.parse({
+        role: "RN",
+        date: "2026-10-16",
+        startTime: "19:00",
+        endTime: "07:00",
+      }).endTime,
+    ).toBe("07:00");
+  });
+
+  it("rejects a nonempty claim body and an unknown cancellation reason", () => {
+    expect(claimShiftRequestSchema.safeParse({}).success).toBe(true);
+    expect(claimShiftRequestSchema.safeParse({ nurseId: "nurse-1" }).success).toBe(false);
+    expect(cancelShiftRequestSchema.safeParse({ reason: "late" }).success).toBe(false);
+    expect(cancelShiftRequestSchema.parse({ reason: "no-show" }).reason).toBe("no-show");
   });
 });
