@@ -14,7 +14,7 @@ Agency login IDs equal agency IDs. Foreign keys ensure only nurses own credentia
 
 Store facility-local date/time values. An end time earlier than start time means the following day. Preserve October 2–4 fixture dates and include them in the required flows. Serializers must return YYYY-MM-DD and HH:mm, join agencyName and return null for an open shift's claimedBy. Never return password hashes. Claim updates must condition on `status = 'open'` atomically to prevent double claims.
 
-Use custom JWT authentication to match the supplied IDs and contract; Supabase Auth is not required. Use a server-only secret, fixed allowed algorithm, expiry and verified claims. Password comparison must support pgcrypto bcrypt. No runtime connection or secret has been configured.
+Superseded planning direction (2026-10-15): custom JWT signing and application password comparison were proposed but never implemented. The user now requires Supabase authentication and authorization. Follow [004-auth-rbac-api/plan.md](../004-auth-rbac-api/plan.md): Supabase-issued JWTs, internal Auth UUID mapping to unchanged public IDs, user-scoped access, RLS and secured mutation functions. The original private-schema/service-role approach elsewhere in this plan remains historical baseline context; 002 records actual hosted setup and 004 plans its replacement for authenticated APIs.
 
 ## Planned changes and verification
 
@@ -60,6 +60,6 @@ No third-party skill utilities or image-generation services have been executed/c
 
 ## Dependencies and limitations
 
-Resolve Q01–Q03 before affected mutations, and Q04 before related views/storage. Historical embedded SQL checks verified SQL, not hosted Supabase provisioning. Hosted verification is pending. The build was blocked by Turbopack's local-port requirement in the sandbox.
+Q01–Q03 are resolved for API implementation in [004-auth-rbac-api/spec.md](../004-auth-rbac-api/spec.md); resolve Q04 before related views/storage. Historical embedded SQL checks verified SQL, not hosted Supabase provisioning; subsequent hosted evidence is in 002. The historical build was blocked by Turbopack's local-port requirement in the sandbox.
 
 No custom one-time scripts or additional SDD pipeline: Markdown, AGENTS and manual evidence cover this workflow. Only ordered migrations remain for the database; fixture loading is the second migration.

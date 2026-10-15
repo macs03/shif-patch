@@ -39,3 +39,7 @@ Historical skills checks confirmed all 107 Hallmark and 36 Supabase files matche
 Cleanup verification: thirteen local links valid, no obsolete project-documentation references, installed skill hashes intact, all eight private archive files matched their checksums, constitution/plan versions consistent and git diff --check passed. The first inline cleanup command had a syntax error before any mutation; it was corrected and the cleanup completed. No application tests were rerun for this documentation/configuration-only change.
 
 Hosted setup and verification for parent T01 are recorded in [002-supabase-initial-data/tasks.md](../002-supabase-initial-data/tasks.md). The hosted baseline and server read passed on 2026-10-14.
+
+## Authentication and API planning (2026-10-15)
+
+Parent T02–T06 are planned in [004-auth-rbac-api/tasks.md](../004-auth-rbac-api/tasks.md) using Supabase Auth and database authorization, explicitly requested by the user. Implementation remains pending. Cancellation permissions and inclusive America/Bogota credential expiry are resolved by user replies; the feature defines remaining API error decisions, migration of the privileged read helper and automated contract/security verification. Older Q01–Q03 dependency labels in the task table describe their original state and are superseded by these decisions. Historical baseline evidence above is unchanged.

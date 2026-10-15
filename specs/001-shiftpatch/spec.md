@@ -62,9 +62,9 @@ Credential, audit and timesheet test IDs are packet requirements; their endpoint
 
 ## Open questions
 
-- Q01: Which roles may cancel which shifts? The contract does not specify this.
-- Q02: Is a credential valid throughout expiresOn? Define an explicit facility-local evaluation date for tests.
-- Q03: Which codes/messages cover a missing ID, already-filled shift, invalid token or another agency's resources? Keep errors shaped as {error:string}.
+- Q01 resolved by user 2026-10-15: the claiming nurse or owning agency may cancel; admin remains read-only. See [004-auth-rbac-api/spec.md](../004-auth-rbac-api/spec.md).
+- Q02 resolved by user 2026-10-15: credentials remain valid through expiresOn; use America/Bogota for the business date and a fixed evaluation instant in tests.
+- Q03 resolved as feature decisions in [004-auth-rbac-api/spec.md](../004-auth-rbac-api/spec.md): explicit codes/messages for missing IDs, conflicts, invalid tokens and forbidden ownership, retaining `{error:string}` and packet messages.
 - Q04: Minimal fields and storage for upload, audit log and timesheets, without promising advanced modules.
 
 The extended first-session scope covers SDD and skills setup, data model and fixtures. Routes, UI, uploads, dashboards and deployment belong to later tasks. Installing guidance does not add functionality.
