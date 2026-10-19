@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { formatScheduledDuration } from "@/lib/domain/credentials";
 import type { AuditEvent, Shift } from "@/lib/domain/types";
+import { Loader } from "./Loader";
 import { IconRefresh } from "./UiIcons";
 
 type Load = "loading" | "ready" | "error";
@@ -96,7 +97,7 @@ export function AdminDashboard({
               <IconRefresh />
             </button>
           </div>
-          {shiftState === "loading" ? <p className="state-line">Loading shifts</p> : null}
+          {shiftState === "loading" ? <Loader label="Loading shifts" /> : null}
           {shiftState === "ready" && metrics ? (
             <div className="metric-chips" role="group" aria-label="Filter shifts">
               <button
@@ -202,7 +203,7 @@ export function AdminDashboard({
               <IconRefresh />
             </button>
           </div>
-          {auditState === "loading" ? <p className="state-line">Loading audit</p> : null}
+          {auditState === "loading" ? <Loader label="Loading audit" /> : null}
           {auditError ? <p className="state-line">{auditError}</p> : null}
           {auditState === "ready" && events.length === 0 && !auditError ? (
             <p className="state-line">No audit events yet.</p>

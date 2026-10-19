@@ -2,11 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 
+import { Loader } from "./Loader";
 import { calendarDate } from "@/lib/domain/schemas";
 import type { CredentialResponse } from "@/lib/domain/types";
 
-function statusCopy(view: CredentialResponse | null): string {
-  if (!view) return "Loading credential";
+function statusCopy(view: CredentialResponse): string {
   if (view.status === "missing" || !view.credential) return "No credential on file. You cannot claim shifts.";
   const { expiresOn, documentName } = view.credential;
   if (view.status === "expired") {
@@ -80,7 +80,13 @@ export function CredentialForm({
           {tag.label}
         </span>
       </div>
-      <p className="state-line">{loadError ?? statusCopy(view)}</p>
+      {loadError ? (
+        <p className="state-line">{loadError}</p>
+      ) : !view ? (
+        <Loader label="Loading credential" />
+      ) : (
+        <p className="state-line">{statusCopy(view)}</p>
+      )}
       <form className="create-form" onSubmit={submit}>
         <div className="field">
           <label htmlFor="credential-document">Document</label>

@@ -26,6 +26,14 @@ export function IconRefresh({ className }: IconProps) {
   );
 }
 
+export function IconSpinner({ className }: IconProps) {
+  return (
+    <svg className={className} width={20} height={20} viewBox="0 0 24 24" aria-hidden>
+      <path {...stroke} d="M12 3a9 9 0 1 0 9 9" />
+    </svg>
+  );
+}
+
 export function IconSignOut({ className }: IconProps) {
   return (
     <svg className={className} width={20} height={20} viewBox="0 0 24 24" aria-hidden>

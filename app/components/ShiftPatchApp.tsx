@@ -24,6 +24,7 @@ import { CredentialForm } from "./CredentialForm";
 import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
 import { AppHeader } from "./AppHeader";
+import { Loader } from "./Loader";
 import { IconClose, IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
 
 type NursePanel = "marketplace" | "credential";
@@ -643,7 +644,7 @@ export function ShiftPatchApp() {
               document.body,
             )
             : null}
-          {list.status === "loading" ? <p className="state-line">Loading shifts</p> : null}
+          {list.status === "loading" ? <Loader label="Loading shifts" /> : null}
           {list.loadError ? (
             <div className="state-block">
               <p>{list.loadError}</p>
