@@ -46,6 +46,18 @@ describe("ShiftPatchApp", () => {
     jest.restoreAllMocks();
   });
 
+  it("toggles password visibility without clearing the value", () => {
+    render(<ShiftPatchApp />);
+    const password = screen.getByTestId("login-password-input");
+    fireEvent.change(password, { target: { value: "Trial2026!" } });
+    expect(password).toHaveAttribute("type", "password");
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(password).toHaveAttribute("type", "text");
+    expect(password).toHaveValue("Trial2026!");
+    fireEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(password).toHaveAttribute("type", "password");
+  });
+
   it("routes a nurse and an agency, and clears the password", async () => {
     const setItem = jest.spyOn(Storage.prototype, "setItem");
     installFetch((url) => {

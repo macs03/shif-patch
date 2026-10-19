@@ -22,6 +22,7 @@ import { CreateShiftForm } from "./CreateShiftForm";
 import { CredentialForm } from "./CredentialForm";
 import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
+import { IconEye, IconEyeOff, IconRefresh, IconSignOut } from "./UiIcons";
 
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
@@ -64,6 +65,7 @@ function upsert(shifts: Shift[], shift: Shift): Shift[] {
 export function ShiftPatchApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -107,6 +109,7 @@ export function ShiftPatchApp() {
     setCreating(false);
     setEmail("");
     setPassword("");
+    setShowPassword(false);
     setLoginError("");
     setList({ status: "ready", shifts: [], loadError: null });
     setCredential(idleCredential);
@@ -327,6 +330,7 @@ export function ShiftPatchApp() {
       const result = await login(parsed.data.email, parsed.data.password, controller.signal);
       if (epoch.current !== snap) return;
       setPassword("");
+      setShowPassword(false);
       setNotice(null);
       setList(result.user.role === "admin"
         ? { status: "ready", shifts: [], loadError: null }
@@ -359,6 +363,7 @@ export function ShiftPatchApp() {
     setCreating(false);
     setEmail("");
     setPassword("");
+    setShowPassword(false);
     setLoginError("");
     setNotice(null);
     setList({ status: "ready", shifts: [], loadError: null });
@@ -404,22 +409,90 @@ export function ShiftPatchApp() {
 
   const mode = session?.user.role === "nurse" || session?.user.role === "agency" ? session.user.role : null;
 
+  if (!session) {
+    return (
+      <div className="auth-gate">
+        <div className="auth-card">
+          <header className="mast">
+            <p className="mark">ShiftPatch</p>
+            <h1>Sign in</h1>
+            <p className="lede">Use your staffing account to claim or publish shifts.</p>
+          </header>
+          <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
+          <form className="login" onSubmit={onLogin}>
+            <div className="field">
+              <label htmlFor="login-email">Email</label>
+              <input
+                id="login-email"
+                data-testid="login-email-input"
+                type="email"
+                autoComplete="username"
+                value={email}
+                aria-invalid={loginError ? true : undefined}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </div>
+            <div className="field">
+              <div className="field-label-row">
+                <label htmlFor="login-password">Password</label>
+                <button
+                  type="button"
+                  className="btn btn-icon btn-icon-muted"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  aria-controls="login-password"
+                  onClick={() => setShowPassword((open) => !open)}
+                >
+                  {showPassword ? <IconEyeOff /> : <IconEye />}
+                </button>
+              </div>
+              <input
+                id="login-password"
+                data-testid="login-password-input"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                aria-invalid={loginError ? true : undefined}
+                aria-describedby={loginError ? "login-error" : undefined}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </div>
+            {loginError ? <p id="login-error" className="field-error">{loginError}</p> : null}
+            <button
+              type="submit"
+              data-testid="login-submit-button"
+              className="btn btn-primary"
+              disabled={loginPending}
+            >
+              {loginPending ? "Signing in" : "Sign in"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={session?.user.role === "admin" ? "shell shell-wide" : "shell"}>
+    <div className={session.user.role === "admin" ? "shell shell-wide" : "shell"}>
       <header className="mast">
         <p className="mark">ShiftPatch</p>
         <div className="mast-row">
-          <h1>{session ? session.user.name : "Sign in"}</h1>
-          {session ? (
-            <button type="button" className="btn" onClick={signOut}>Sign out</button>
-          ) : null}
+          <h1>{session.user.name}</h1>
+          <button
+            type="button"
+            className="btn btn-icon btn-icon-muted"
+            onClick={signOut}
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            <IconSignOut />
+          </button>
         </div>
-        {session ? <p className="role-line">{session.user.role}</p> : (
-          <p className="lede">Use your staffing account to claim or publish shifts.</p>
-        )}
+        <p className="role-line">{session.user.role}</p>
       </header>
       <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
-      {session?.user.role === "admin" ? (
+      {session.user.role === "admin" ? (
         <AdminDashboard
           shifts={admin.shifts}
           metrics={admin.metrics}
@@ -431,45 +504,7 @@ export function ShiftPatchApp() {
           onRefresh={() => void refresh(false)}
         />
       ) : null}
-      {!session ? (
-        <form className="login" onSubmit={onLogin}>
-          <div className="field">
-            <label htmlFor="login-email">Email</label>
-            <input
-              id="login-email"
-              data-testid="login-email-input"
-              type="email"
-              autoComplete="username"
-              value={email}
-              aria-invalid={loginError ? true : undefined}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              data-testid="login-password-input"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              aria-invalid={loginError ? true : undefined}
-              aria-describedby={loginError ? "login-error" : undefined}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
-          {loginError ? <p id="login-error" className="field-error">{loginError}</p> : null}
-          <button
-            type="submit"
-            data-testid="login-submit-button"
-            className="btn btn-primary"
-            disabled={loginPending}
-          >
-            {loginPending ? "Signing in" : "Sign in"}
-          </button>
-        </form>
-      ) : null}
-      {session?.user.role === "nurse" ? (
+      {session.user.role === "nurse" ? (
         <CredentialForm
           view={credential.view}
           loadError={credential.error}
@@ -481,8 +516,15 @@ export function ShiftPatchApp() {
         <section className="board" aria-busy={list.status === "loading"}>
           <div className="board-bar">
             <h2>{mode === "nurse" ? "Marketplace" : "Your shifts"}</h2>
-            <button type="button" className="btn" disabled={list.status === "loading"} onClick={() => void refresh(hold)}>
-              Refresh
+            <button
+              type="button"
+              className={`btn btn-icon btn-icon-muted${list.status === "loading" ? " btn-icon--spin" : ""}`}
+              disabled={list.status === "loading"}
+              onClick={() => void refresh(hold)}
+              aria-label="Refresh"
+              title="Refresh"
+            >
+              <IconRefresh />
             </button>
           </div>
           {mode === "agency" ? (

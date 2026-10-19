@@ -2,6 +2,7 @@
 
 import { formatScheduledDuration } from "@/lib/domain/credentials";
 import type { AuditEvent, Shift } from "@/lib/domain/types";
+import { IconRefresh } from "./UiIcons";
 
 type Load = "loading" | "ready" | "error";
 
@@ -30,8 +31,15 @@ export function AdminDashboard({
     <section className="board" aria-busy={shiftState === "loading"}>
       <div className="board-bar">
         <h2>Operations</h2>
-        <button type="button" className="btn" disabled={shiftState === "loading"} onClick={onRefresh}>
-          Refresh
+        <button
+          type="button"
+          className={`btn btn-icon btn-icon-muted${shiftState === "loading" ? " btn-icon--spin" : ""}`}
+          disabled={shiftState === "loading"}
+          onClick={onRefresh}
+          aria-label="Refresh"
+          title="Refresh"
+        >
+          <IconRefresh />
         </button>
       </div>
       {shiftState === "loading" ? <p className="state-line">Loading shifts</p> : null}

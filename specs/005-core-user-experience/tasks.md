@@ -63,3 +63,10 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 T01–T06 remain completed for their recorded UI scope; T07 and T08 remain pending. On 2026-10-15 the user withdrew real-backend and browser CI from [007-ci-e2e](../007-ci-e2e/spec.md) because a separate Supabase project can cost money. 007 no longer carries T07. Hosted handler checks from 004 do not replace browser E2E. The second baseline nurse must remain expired. Admin/credentials now exist under 006; the earlier UI-session admin scope message is historical.
 
 The immediately preceding Codex review reran unit/UI: 6 suites, 38 tests passed, plus typecheck and lint on Node 22.20.0. No hosted tests, browser E2E or Node 24 build were rerun. This follow-up is documentation/planning only, with no dependency installation. Vercel/deployment is explicitly deferred by the user. Current-turn documentation check outcomes are recorded in 007/T00; private complete native export remains pending.
+
+### 2026-10-19 — Centered Cobalt login
+
+- Actual agent: primary Cursor agent only; no delegation.
+- Scope: Hallmark Cobalt tokens in `app/globals.css`, Space Grotesk + Inter via `next/font`, centered signed-out card, password show/hide control; signed-in layouts unchanged aside from shared tokens.
+- Files: `app/layout.tsx`, `app/globals.css`, `app/components/ShiftPatchApp.tsx`, `__tests__/ui/shift-patch-app.test.tsx`, this feature's `spec.md` and `tasks.md`.
+- Checks: `npm run typecheck` and `npm run lint` passed. `npx jest --no-watchman --selectProjects ui` — 2 suites, 13 tests passed (includes password visibility toggle). Browser on localhost:3000 — centered sign-in card, show/hide password reveals value with `aria-pressed`, invalid login path covered in RTL; successful nurse login shows top-aligned marketplace shell (Maria Lopez / Marketplace).

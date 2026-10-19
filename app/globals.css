@@ -1,26 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  --color-paper: oklch(96.8% 0.012 95);
-  --color-paper-2: oklch(93.5% 0.018 95);
-  --color-ink: oklch(24% 0.028 250);
-  --color-muted: oklch(44% 0.02 250);
-  --color-rule: oklch(78% 0.02 95);
-  --color-accent: oklch(36% 0.07 205);
-  --color-accent-ink: oklch(98% 0.01 95);
-  --color-focus: oklch(46% 0.14 255);
+  --color-paper: oklch(98.5% 0.004 250);
+  --color-paper-2: oklch(96% 0.006 250);
+  --color-ink: oklch(24% 0.02 258);
+  --color-muted: oklch(34% 0.018 257);
+  --color-rule: oklch(88% 0.012 258);
+  --color-accent: oklch(58% 0.2 256);
+  --color-accent-ink: oklch(98.5% 0.004 250);
+  --color-focus: oklch(58% 0.2 256);
   --color-danger: oklch(40% 0.14 25);
-  --color-danger-bg: oklch(95% 0.03 25);
+  --color-danger-bg: oklch(96% 0.03 25);
   --color-ok: oklch(34% 0.07 165);
   --color-ok-bg: oklch(94% 0.035 165);
-  --font-display: var(--font-geist-sans), sans-serif;
-  --font-body: var(--font-geist-sans), sans-serif;
+  --font-display: var(--font-space-grotesk), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
+  --radius-control: 6px;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
 }
 
 @theme inline {
   --color-background: var(--color-paper);
   --color-foreground: var(--color-ink);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -140,6 +148,32 @@ body {
   min-width: 0;
 }
 
+.auth-gate {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: var(--space-md);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.auth-card {
+  width: min(24rem, 100%);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  min-width: 0;
+}
+
+.auth-card .mast {
+  margin-bottom: var(--space-md);
+}
+
+.auth-card .banner {
+  margin-top: 0;
+}
+
 .login,
 .create-form {
   display: grid;
@@ -147,10 +181,59 @@ body {
   margin-top: 1rem;
 }
 
+.auth-card .login {
+  margin-top: var(--space-md);
+}
+
 .field {
   display: grid;
   gap: 0.35rem;
   min-width: 0;
+}
+
+.field-label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.btn-icon {
+  min-width: 44px;
+  width: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.btn-icon-muted {
+  border-color: var(--color-rule);
+  color: var(--color-muted);
+}
+
+@media (hover: hover) {
+  .btn-icon-muted:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+}
+
+.btn-icon--spin svg {
+  animation: icon-spin 0.85s linear infinite;
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .field label,
@@ -165,10 +248,24 @@ body {
   min-height: 44px;
   box-sizing: border-box;
   border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
   background: var(--color-paper);
   color: var(--color-ink);
   padding: 0.5rem 0.7rem;
   font: inherit;
+}
+
+@media (hover: hover) {
+  .field input:hover:not(:disabled):not([aria-invalid="true"]),
+  .field select:hover:not(:disabled):not([aria-invalid="true"]) {
+    border-color: var(--color-ink);
+  }
+}
+
+.field input:disabled,
+.field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .field input[aria-invalid="true"],
@@ -186,6 +283,7 @@ body {
   min-height: 44px;
   padding: 0.55rem 0.9rem;
   border: 1px solid var(--color-ink);
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--color-ink);
   font: inherit;
@@ -352,5 +450,9 @@ body {
   .btn:active {
     transform: none;
     transition: none;
+  }
+
+  .btn-icon--spin svg {
+    animation: none;
   }
 }

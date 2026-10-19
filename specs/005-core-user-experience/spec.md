@@ -12,6 +12,8 @@ The original starting point contained API handlers and a starter home page. The 
 
 Included: login interface, role-specific nurse marketplace and agency dashboard, shift cards, create form, claim and agency cancellation actions, credential-error handling, success/error banners, accessible responsive interaction states and critical browser E2E tests.
 
+The signed-out login uses a centered card on a full-viewport canvas, Hallmark Cobalt tokens in `app/globals.css`, and a show/hide password control beside the Password label. Existing login test IDs, labels and API behavior are unchanged.
+
 Excluded: recommendations, automatic matching, push/email notifications, advanced scheduling, registration, password recovery, token refresh, credential uploads, audit logs, timesheets, a new admin dashboard, nurse cancellation UI, new API endpoints and deployment. Existing API cancellation rights for a claiming nurse remain unchanged. The six additional parent test IDs for deferred modules remain parent obligations; this epic implements the nine listed below.
 
 Application implementation is delivered. Browser E2E completion is planned in [007-ci-e2e/plan.md](../007-ci-e2e/plan.md), including dependency approval, isolated test identities and a Node 24 production build. Vercel/deployment remains excluded.
