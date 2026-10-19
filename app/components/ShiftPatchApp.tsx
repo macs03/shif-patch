@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 
 import { loginRequestSchema } from "@/lib/domain/schemas";
 import {
@@ -23,7 +24,7 @@ import { CredentialForm } from "./CredentialForm";
 import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
 import { AppHeader } from "./AppHeader";
-import { IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
+import { IconClose, IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
 
 type NursePanel = "marketplace" | "credential";
 
@@ -83,6 +84,8 @@ export function ShiftPatchApp() {
   const [admin, setAdmin] = useState<AdminState>(idleAdmin);
 
   const epoch = useRef(0);
+  const postDialog = useRef<HTMLDialogElement>(null);
+  const ignoreDialogClose = useRef(false);
   const inflight = useRef(new Set<AbortController>());
   const pendingRef = useRef<string | null>(null);
   const holdRef = useRef(false);
@@ -287,6 +290,7 @@ export function ShiftPatchApp() {
       if (epoch.current !== request.snap) return;
       setList((prev) => ({ status: "ready", shifts: upsert(prev.shifts, shift), loadError: null }));
       setNotice({ tone: "success", message: success });
+      if (key === "publish") setCreating(false);
       await load(current, request.signal, request.snap, false);
     } catch (error) {
       if (isAbort(error) || epoch.current !== request.snap) return;
@@ -413,6 +417,24 @@ export function ShiftPatchApp() {
       }
     }
   }
+
+  useEffect(() => {
+    const dialog = postDialog.current;
+    if (!creating || !dialog) return;
+    if (!dialog.open) {
+      try {
+        dialog.showModal();
+      } catch {
+        dialog.setAttribute("open", "");
+      }
+    }
+    return () => {
+      ignoreDialogClose.current = true;
+      if (dialog.open && typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+      ignoreDialogClose.current = false;
+    };
+  }, [creating]);
 
   const mode = session?.user.role === "nurse" || session?.user.role === "agency" ? session.user.role : null;
 
@@ -566,23 +588,61 @@ export function ShiftPatchApp() {
               type="button"
               data-testid="agency-post-shift-button"
               className="btn btn-primary"
-              onClick={() => setCreating((open) => !open)}
+              onClick={() => setCreating(true)}
             >
-              {creating ? "Close form" : "Post shift"}
+              Post shift
             </button>
           ) : null}
-          {mode === "agency" && creating ? (
-            <CreateShiftForm
-              pending={pendingKey === "publish"}
-              locked={hold}
-              onSubmit={(value) => {
-                if (!session) return;
-                void settleMutation(session, "publish", "Shift published.", (signal) => (
-                  createShift(session.token, value, signal)
-                ));
-              }}
-            />
-          ) : null}
+          {mode === "agency" && creating
+            ? createPortal(
+              <dialog
+                ref={postDialog}
+                className="modal"
+                aria-labelledby="post-shift-title"
+                onClick={(event) => {
+                  const box = event.currentTarget.getBoundingClientRect();
+                  const inside = event.clientX >= box.left && event.clientX <= box.right
+                    && event.clientY >= box.top && event.clientY <= box.bottom;
+                  if (!inside) event.currentTarget.close();
+                }}
+                onClose={() => {
+                  if (!ignoreDialogClose.current) setCreating(false);
+                }}
+              >
+                <div className="modal-bar">
+                  <h2 id="post-shift-title">Post shift</h2>
+                  <button
+                    type="button"
+                    className="btn btn-icon btn-icon-muted"
+                    aria-label="Close"
+                    title="Close"
+                    onClick={() => {
+                      const dialog = postDialog.current;
+                      if (!dialog) return;
+                      if (typeof dialog.close === "function") dialog.close();
+                      else {
+                        dialog.removeAttribute("open");
+                        setCreating(false);
+                      }
+                    }}
+                  >
+                    <IconClose />
+                  </button>
+                </div>
+                <CreateShiftForm
+                  pending={pendingKey === "publish"}
+                  locked={hold}
+                  onSubmit={(value) => {
+                    if (!session) return;
+                    void settleMutation(session, "publish", "Shift published.", (signal) => (
+                      createShift(session.token, value, signal)
+                    ));
+                  }}
+                />
+              </dialog>,
+              document.body,
+            )
+            : null}
           {list.status === "loading" ? <p className="state-line">Loading shifts</p> : null}
           {list.loadError ? (
             <div className="state-block">

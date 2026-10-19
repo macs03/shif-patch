@@ -8,6 +8,15 @@ const stroke = {
   strokeLinejoin: "round" as const,
 };
 
+export function IconClose({ className }: IconProps) {
+  return (
+    <svg className={className} width={20} height={20} viewBox="0 0 24 24" aria-hidden>
+      <path {...stroke} d="M6 6l12 12" />
+      <path {...stroke} d="M18 6L6 18" />
+    </svg>
+  );
+}
+
 export function IconRefresh({ className }: IconProps) {
   return (
     <svg className={className} width={20} height={20} viewBox="0 0 24 24" aria-hidden>

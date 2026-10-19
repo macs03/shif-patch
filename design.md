@@ -39,7 +39,8 @@ Locked visual system for the app (Hallmark **Cobalt**, modern-minimal). Implemen
 - **Header:** horizontal bar edge-to-edge; brand left (SP monogram + “ShiftPatch”), user name + role badge + sign-out icon right
 - **Logo:** `--logo-size` square, “SP” centered (grid + `--logo-font-size`, `--logo-letter-spacing`)
 - **Status pills:** `--radius-pill`; outline + tinted background + matching text (role badge, credential Active/Expired/neutral)
-- **Role tabs (nurse):** horizontal pills with `--tab-gap`; active tab filled with `--color-accent`
+- **Role tabs (nurse):** Marketplace / Credential — horizontal pills with `--tab-gap`; active tab filled with `--color-accent`
+- **Admin tabs:** Operations / Audit / Scheduled hours — same tab pattern as nurse
 - **Icon actions:** `.btn-icon` at `--touch-min`; refresh spins while loading; password show/hide on login
 
 ## Motion and a11y
