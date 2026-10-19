@@ -37,5 +37,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [007-ci-e2e/spec.md](007-ci-e2e/spec.md): GitHub Actions quality workflow without a backend. Local Node 24 checks passed; a GitHub run is still unobserved. Real-backend verification and Vercel are out of scope.
 - [008-consistency-audit/spec.md](008-consistency-audit/spec.md): consistency, security, UI and verification audit. One compatible refresh-race fix is applied; hosted RLS and some viewport checks remain unverified.
 - [009-security-hardening/spec.md](009-security-hardening/spec.md): local hardening and readability improvements, including bounded JSON and login-throttle responses; direct-provider enforcement and deployed security verification remain open.
+- [010-project-wide-review/spec.md](010-project-wide-review/spec.md): completed current-project static review and focused frontend/client corrections; local verification and pending hosted cleanup/security checks in its tasks.
 
 Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.

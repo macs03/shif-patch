@@ -5,10 +5,17 @@ import { useState } from "react";
 import { formatScheduledDuration } from "@/lib/domain/credentials";
 import type { AuditEvent, Shift } from "@/lib/domain/types";
 import { Loader } from "./Loader";
+import { RoleTabs } from "./RoleTabs";
 import { IconRefresh } from "./UiIcons";
 
 type Load = "loading" | "ready" | "error";
 type AdminPanel = "operations" | "audit" | "scheduled";
+
+const adminTabs = [
+  { value: "operations", label: "Operations" },
+  { value: "audit", label: "Audit" },
+  { value: "scheduled", label: "Scheduled hours" },
+] as const;
 
 export function AdminDashboard({
   shifts,
@@ -41,46 +48,13 @@ export function AdminDashboard({
 
   return (
     <>
-      <div className="role-tabs" role="tablist" aria-label="Admin">
-        <button
-          type="button"
-          role="tab"
-          id="admin-tab-operations"
-          className="role-tab"
-          aria-selected={panel === "operations"}
-          aria-controls="admin-panel-operations"
-          onClick={() => setPanel("operations")}
-        >
-          Operations
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="admin-tab-audit"
-          className="role-tab"
-          aria-selected={panel === "audit"}
-          aria-controls="admin-panel-audit"
-          onClick={() => setPanel("audit")}
-        >
-          Audit
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="admin-tab-scheduled"
-          className="role-tab"
-          aria-selected={panel === "scheduled"}
-          aria-controls="admin-panel-scheduled"
-          onClick={() => setPanel("scheduled")}
-        >
-          Scheduled hours
-        </button>
-      </div>
+      <RoleTabs label="Admin" idPrefix="admin" tabs={adminTabs} value={panel} onChange={setPanel} />
       {panel === "operations" ? (
         <section
           id="admin-panel-operations"
           className="board"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby="admin-tab-operations"
           aria-busy={shiftState === "loading"}
         >
@@ -187,6 +161,7 @@ export function AdminDashboard({
           id="admin-panel-audit"
           className="board"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby="admin-tab-audit"
           aria-busy={auditState === "loading"}
         >
@@ -242,6 +217,7 @@ export function AdminDashboard({
           id="admin-panel-scheduled"
           className="board"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby="admin-tab-scheduled"
           aria-busy={shiftState === "loading"}
         >

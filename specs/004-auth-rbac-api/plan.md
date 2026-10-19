@@ -1,8 +1,10 @@
 # Supabase Authentication, Authorization and REST API — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: Planned; implementation pending
+Specification: [spec.md](spec.md) · Date: 2026-10-15 · Status: Implemented; verification partial (see tasks.md)
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Parent tasks: 001-shiftpatch/T02–T06. Existing hosted baseline: 002-supabase-initial-data. Existing test harness: 003-test-harness.
+
+The implementation sequence below records the original technical plan. Implementation now exists; task statuses and dated execution logs distinguish completed code from incomplete hosted/browser/build evidence. Summary reconciled during 010/T05 without changing historical results.
 
 ## Minimal technical decision
 

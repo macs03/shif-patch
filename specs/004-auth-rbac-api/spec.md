@@ -1,12 +1,12 @@
 # Supabase Authentication, Authorization and REST API — Specification
 
-Feature ID: 004-auth-rbac-api · Date: 2026-10-15 · Status: Planned; implementation pending
+Feature ID: 004-auth-rbac-api · Date: 2026-10-15 · Status: Implemented; verification partial (see tasks.md)
 
 Source: user request for secure authentication, three roles and six REST operations, explicitly using Supabase for authentication and authorization. Parent: [001-shiftpatch/spec.md](../001-shiftpatch/spec.md), R02–R09. Applicable constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
 
 ## Problem and expected outcome
 
-ShiftPatch has hosted fixtures, a server read helper and a Jest/Zod harness, but no login or REST handlers. Nurses must browse and claim shifts, agencies must create and manage their own shifts, and admins must read all shifts. Authorization must hold inside the server and the Supabase database.
+The original baseline had hosted fixtures, a server read helper and a Jest/Zod harness without login or REST handlers. This feature implements those handlers: nurses browse and claim shifts, agencies create and manage their own shifts, and admins read all shifts. Authorization must hold inside the server and the Supabase database. Implementation exists; incomplete verification remains explicit in tasks.md.
 
 ## Scope
 
@@ -14,7 +14,7 @@ Included: Supabase email/password login and signed access JWTs, identity mapping
 
 Excluded: OAuth, registration, recovery, email verification flows, advanced user management, new UI, new administrative endpoints, uploads, audit/timesheet modules and deployment. Administrative information in this feature is limited to the existing full shift contract; additional administrative fields require a specification.
 
-This session delivers planning documents only. Accounts, database migrations and application implementation remain future work.
+The initial 2026-10-15 session delivered planning documents only. Subsequent implementation and actual verification outcomes are recorded in tasks.md; this current summary does not close outstanding acceptance checks.
 
 ## Requirements and acceptance criteria
 

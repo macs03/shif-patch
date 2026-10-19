@@ -47,6 +47,44 @@ describe("ShiftPatchApp", () => {
   });
 
   it.each([
+    { user: nurse, email: "maria.lopez@example.com", first: "Marketplace", second: "Credential", last: "Credential" },
+    { user: admin, email: "alex.kim@example.com", first: "Operations", second: "Audit", last: "Scheduled hours" },
+  ])("supports keyboard navigation of $user.role tabs", async ({ user, email, first, second, last }) => {
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token", user });
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
+      if (url.endsWith("/api/admin/dashboard")) return jsonResponse({ shifts: trialShifts, metrics: { open: 2, filled: 1 } });
+      if (url.endsWith("/api/admin/audit")) return jsonResponse({ events: [] });
+      return jsonResponse({ shifts: trialShifts });
+    });
+    render(<ShiftPatchApp />);
+    await signIn(email);
+    const initial = await screen.findByRole("tab", { name: first });
+    const next = screen.getByRole("tab", { name: second });
+    const final = screen.getByRole("tab", { name: last });
+    expect(initial).toHaveAttribute("tabindex", "0");
+    expect(next).toHaveAttribute("tabindex", "-1");
+    initial.focus();
+    fireEvent.keyDown(initial, { key: "ArrowRight" });
+    expect(next).toHaveFocus();
+    expect(next).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: second })).toBeInTheDocument();
+    fireEvent.keyDown(next, { key: "Home" });
+    expect(initial).toHaveFocus();
+    fireEvent.keyDown(initial, { key: "ArrowLeft" });
+    expect(final).toHaveFocus();
+    fireEvent.keyDown(final, { key: "ArrowRight" });
+    expect(initial).toHaveFocus();
+    fireEvent.keyDown(initial, { key: "End" });
+    expect(final).toHaveFocus();
+    expect(fireEvent.keyDown(final, { key: "ArrowDown" })).toBe(true);
+    expect(fireEvent.keyDown(final, { key: "ArrowUp" })).toBe(true);
+    expect(final).toHaveFocus();
+    fireEvent.click(initial);
+    expect(initial).toHaveAttribute("aria-selected", "true");
+  });
+
+  it.each([
     { status: 429, message: "Too many requests. Try again later." },
     { status: 413, message: "Request body too large" },
   ])("allows login retry after a $status response", async ({ status, message }) => {

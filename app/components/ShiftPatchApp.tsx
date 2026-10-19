@@ -25,9 +25,15 @@ import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
 import { AppHeader } from "./AppHeader";
 import { Loader } from "./Loader";
+import { RoleTabs } from "./RoleTabs";
 import { IconClose, IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
 
 type NursePanel = "marketplace" | "credential";
+
+const nurseTabs = [
+  { value: "marketplace", label: "Marketplace" },
+  { value: "credential", label: "Credential" },
+] as const;
 
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
@@ -504,30 +510,7 @@ export function ShiftPatchApp() {
       <div className={session.user.role === "admin" ? "shell shell-wide" : "shell"}>
       <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
       {session.user.role === "nurse" ? (
-        <div className="role-tabs" role="tablist" aria-label="Nurse">
-          <button
-            type="button"
-            role="tab"
-            id="nurse-tab-marketplace"
-            className="role-tab"
-            aria-selected={nursePanel === "marketplace"}
-            aria-controls="nurse-panel-marketplace"
-            onClick={() => setNursePanel("marketplace")}
-          >
-            Marketplace
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="nurse-tab-credential"
-            className="role-tab"
-            aria-selected={nursePanel === "credential"}
-            aria-controls="nurse-panel-credential"
-            onClick={() => setNursePanel("credential")}
-          >
-            Credential
-          </button>
-        </div>
+        <RoleTabs label="Nurse" idPrefix="nurse" tabs={nurseTabs} value={nursePanel} onChange={setNursePanel} />
       ) : null}
       {session.user.role === "admin" ? (
         <AdminDashboard
@@ -545,6 +528,7 @@ export function ShiftPatchApp() {
         <div
           id="nurse-panel-credential"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby="nurse-tab-credential"
         >
           <CredentialForm
@@ -559,6 +543,7 @@ export function ShiftPatchApp() {
         <section
           id={session.user.role === "nurse" ? "nurse-panel-marketplace" : undefined}
           role={session.user.role === "nurse" ? "tabpanel" : undefined}
+          tabIndex={session.user.role === "nurse" ? 0 : undefined}
           aria-labelledby={session.user.role === "nurse" ? "nurse-tab-marketplace" : undefined}
           className="board"
           aria-busy={list.status === "loading"}

@@ -48,20 +48,20 @@ export function CredentialForm({
 }) {
   const [date, setDate] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ field: "document" | "expiresOn"; message: string } | null>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
     if (!file || file.size === 0) {
-      setError("Choose a PDF, JPEG, or PNG.");
+      setError({ field: "document", message: "Choose a PDF, JPEG, or PNG." });
       return;
     }
     if (!calendarDate.safeParse(date).success) {
-      setError("Enter a real expiration date.");
+      setError({ field: "expiresOn", message: "Enter a real expiration date." });
       return;
     }
-    setError("");
+    setError(null);
     onSubmit(file, date);
   }
 
@@ -94,6 +94,8 @@ export function CredentialForm({
             id="credential-document"
             data-testid="credential-upload-input"
             type="file"
+            aria-invalid={error?.field === "document" || undefined}
+            aria-describedby={error?.field === "document" ? "credential-form-error" : undefined}
             accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
           />
@@ -104,11 +106,13 @@ export function CredentialForm({
             id="credential-expiry"
             data-testid="credential-expiry-date-input"
             type="date"
+            aria-invalid={error?.field === "expiresOn" || undefined}
+            aria-describedby={error?.field === "expiresOn" ? "credential-form-error" : undefined}
             value={date}
             onChange={(event) => setDate(event.target.value)}
           />
         </div>
-        {error ? <p className="field-error">{error}</p> : null}
+        {error ? <p id="credential-form-error" className="field-error" role="alert">{error.message}</p> : null}
         <button type="submit" className="btn btn-primary" disabled={pending}>
           {pending ? "Saving credential" : "Save credential"}
         </button>

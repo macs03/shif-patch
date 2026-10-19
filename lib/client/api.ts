@@ -63,7 +63,8 @@ async function read<T>(response: Response, parse: (body: unknown) => T, mutation
     try {
       const parsed = apiErrorSchema.safeParse(await response.json());
       if (parsed.success) message = parsed.data.error;
-    } catch {
+    } catch (error) {
+      if (isAbort(error)) throw error;
       message = "The request failed.";
     }
     throw new ApiError(response.status, message, mutation && response.status >= 500);
@@ -72,7 +73,8 @@ async function read<T>(response: Response, parse: (body: unknown) => T, mutation
   let body: unknown;
   try {
     body = await response.json();
-  } catch {
+  } catch (error) {
+    if (isAbort(error)) throw error;
     throw new ApiError(response.status, "The request failed.", mutation);
   }
   try {
