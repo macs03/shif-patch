@@ -12,7 +12,7 @@ The previous consistency audit and stale-response corrections do not certify eve
 
 - Included now: code review, bounded local diagnostics, a prioritized finding register, compatible correction proposals, verification tasks and explicit decisions for changes that affect accepted requests or API statuses.
 - Also included: candidate improvements to validated form submission, unused credential state and duplicated session reset. These are maintainability opportunities, not demonstrated vulnerabilities; assess necessity before implementing them.
-- Implementation is not part of this request. No new dependencies, scripts, paid services, database writes, external settings, commits or publication.
+- The user subsequently authorized compatible implementation and remaining necessary checks. Preserve the delivered corrections; unresolved Q01–Q04 do not authorize contract or permission changes. No new dependencies, scripts, paid services, database writes, external settings, commits or publication.
 - Preserve login/session behavior, cross-agency reads, own-agency writes, role permissions, credential expiry, atomic claims/cancellations, exact fixtures, full response fields and test IDs.
 - No cosmetic cleanup, generic architecture rewrite, speculative caching or broad helper extraction. Existing F01/F02 corrections remain intact.
 - Hosted file/mutation probes, new test accounts and the withdrawn browser E2E suite remain outside current scope. A verification proposal does not authorize executing those operations.
@@ -56,6 +56,6 @@ No new runtime behavior is approved by this planning artifact. Compatible tasks 
 
 ## Delivery condition
 
-Planning completes with reviewed spec/plan/tasks, source-linked findings, checks and decision gates. Implementation remains pending. Each later task closes only with its own evidence; hosted security and production readiness cannot be certified by local source inspection or unit mocks.
+Planning is delivered and compatible corrections are implemented with the limits recorded in tasks.md. Verify the remaining regression gap under AC01/AC03: successful upload releases the reader, and reconciliation after a lost finalization response returns the committed credential without deleting its active document. Each task closes only with its own evidence; hosted security and production readiness cannot be certified by local source inspection or unit mocks.
 
 R07 tasks must first pass the existing necessity/compatibility gate. A documented no-change/deferred decision is valid for a candidate that does not justify its risk; do not turn this list into a mandatory cleanup campaign.

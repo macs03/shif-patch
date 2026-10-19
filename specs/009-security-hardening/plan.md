@@ -49,6 +49,10 @@ Suggested candidate order after compatible hardening: T08 first; T09/T10 only wh
 5. **T05 / R04–R05:** inspect configured Supabase/edge limits and server-proxy behavior read-only when access exists; record absent access as unverified. Supabase already documents Auth rate limiting and 429, with IP-based behavior; do not assume the proxy retains end-user IP identity. Do not forward arbitrary client IP headers or add secret credentials. Resolve Q02 before changing status handling, retry headers or adding a limiter. A per-process counter is not a reliable distributed protection.
 6. **T06 / R05:** compare Next.js validation with Storage/RPC grants and deployed policies read-only first. Document whether content validation is intentionally route-only and assess own-prefix direct uploads/finalization, active-object deletion and metadata consistency. Do not claim a bypass from a policy listing alone. If a live probe is necessary, prepare a separate isolated, fixture-safe procedure and obtain authorization before any upload/mutation. No new project, credentials, migrations or permission changes in this planning request.
 
+## Authorized regression follow-up — T11 / AC01, AC03, AC07–AC08
+
+Review of delivered code found no further justified production refactor within the resolved scope. Add a route-level test for a committed credential whose finalize response is lost: the follow-up read returns the newly uploaded object, so the route returns its public metadata with 200 and never calls removal. Also assert that a normal valid multipart upload releases its reader. Reuse the existing mocked provider boundary and Jest harness; no database or hosted writes. Preserve Q01–Q04 and T10 deferral. Run the baseline and updated unit/UI suites, typecheck and lint; the production build already recorded for the same application changes is historical, not rerun evidence for this test-only follow-up.
+
 ## Constitution review
 
 | Principle | Application | Exception |

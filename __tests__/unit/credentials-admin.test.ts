@@ -186,8 +186,10 @@ describe("credential and admin routes", () => {
         error: null,
       });
     });
-    const saved = await postCredential(request("/api/credentials", { method: "POST", body: good }));
+    const upload = request("/api/credentials", { method: "POST", body: good });
+    const saved = await postCredential(upload);
     expect(saved.status).toBe(200);
+    expect(upload.body?.locked).toBe(false);
     const payload = await bodyOf(saved);
     expect(payload.status).toBe("expired");
     expect(payload).not.toHaveProperty("objectPath");
@@ -222,6 +224,45 @@ describe("credential and admin routes", () => {
     const failed = await postCredential(request("/api/credentials", { method: "POST", body: good }));
     expect(failed.status).toBe(400);
     expect(mockRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves the active document when finalization committed but its response was lost", async () => {
+    const good = new FormData();
+    good.set("document", new File(["%PDF-"], "license.pdf", { type: "application/pdf" }));
+    good.set("expiresOn", "2020-01-02");
+    let activePath = "";
+    mockRpc.mockImplementation((fn: string, args?: { p_object_path?: string }) => {
+      if (fn === "finalize_credential") {
+        activePath = args?.p_object_path ?? "";
+        return Promise.reject(new Error("finalization response lost"));
+      }
+      return Promise.resolve({
+        data: [{
+          expires_on: "2020-01-02",
+          document_name: "license.pdf",
+          mime_type: "application/pdf",
+          size_bytes: 5,
+          uploaded_at: "2026-10-15T12:00:00.000Z",
+          object_path: activePath,
+        }],
+        error: null,
+      });
+    });
+
+    const saved = await postCredential(request("/api/credentials", { method: "POST", body: good }));
+    expect(saved.status).toBe(200);
+    expect(await bodyOf(saved)).toEqual({
+      status: "expired",
+      credential: {
+        expiresOn: "2020-01-02",
+        documentName: "license.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 5,
+        uploadedAt: "2026-10-15T12:00:00.000Z",
+      },
+    });
+    expect(mockRpc).toHaveBeenCalledWith("read_credential", undefined);
+    expect(mockRemove).not.toHaveBeenCalled();
   });
 
   it("returns both agencies with metrics from the same snapshot and hides it from nurses", async () => {
