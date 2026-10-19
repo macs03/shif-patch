@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { trialShifts } from "@/__tests__/fixtures/trial-shifts";
@@ -41,9 +42,20 @@ function card(id: string) {
   return within(item);
 }
 
+const originalDialogClose = HTMLDialogElement.prototype.close;
+
+function installDialogClose() {
+  if (typeof HTMLDialogElement.prototype.close === "function") return;
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    this.removeAttribute("open");
+    this.dispatchEvent(new Event("close"));
+  };
+}
+
 describe("ShiftPatchApp", () => {
   afterEach(() => {
     jest.restoreAllMocks();
+    HTMLDialogElement.prototype.close = originalDialogClose;
   });
 
   it.each([
@@ -589,4 +601,105 @@ describe("ShiftPatchApp", () => {
       expect(post?.headers && "Content-Type" in (post.headers as object)).toBe(false);
     },
   );
+
+  it("mounts the publish form only while open, resets it on reopen, and keeps it after a failed publish", async () => {
+    installDialogClose();
+    installFetch((url, init) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-agency", user: agencyA });
+      if (url.endsWith("/api/shifts") && init?.method === "POST") return jsonResponse({ error: "Invalid shift" }, 400);
+      return jsonResponse({ agencyId: "agency-a", shifts: trialShifts.filter((shift) => shift.agencyId === "agency-a") });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("admin@sunrisehealth.example");
+    expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(2);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("agency-post-shift-button"));
+    const dialog = screen.getByRole("dialog", { name: "Post shift" });
+    expect(dialog.parentElement).toBe(document.body);
+    expect(screen.getByRole("button", { name: "Close" })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Role"), { target: { value: "RN" } });
+    fireEvent.click(dialog, { clientX: 0, clientY: 0 });
+    expect(screen.getByRole("dialog", { name: "Post shift" })).toBeInTheDocument();
+    fireEvent.click(dialog, { clientX: -1, clientY: -1 });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.queryByLabelText("Role")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("agency-post-shift-button"));
+    expect(screen.getByLabelText("Role")).toHaveValue("");
+    fireEvent.change(screen.getByLabelText("Role"), { target: { value: "LPN" } });
+    fireEvent.change(screen.getByLabelText("Date"), { target: { value: "2026-10-20" } });
+    fireEvent.change(screen.getByLabelText("Start"), { target: { value: "19:00" } });
+    fireEvent.change(screen.getByLabelText("End"), { target: { value: "07:00" } });
+    fireEvent.click(screen.getByTestId("agency-post-shift-submit-button"));
+    expect(await screen.findByText("Invalid shift")).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Post shift" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Role")).toHaveValue("LPN");
+    const openDialog = screen.getByRole("dialog", { name: "Post shift" });
+    act(() => {
+      (openDialog as HTMLDialogElement).close();
+    });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("drops the publish dialog on sign-out and does not reopen it for the next session", async () => {
+    installDialogClose();
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-agency", user: agencyA });
+      return jsonResponse({ agencyId: "agency-a", shifts: trialShifts.filter((shift) => shift.agencyId === "agency-a") });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("admin@sunrisehealth.example");
+    expect(await screen.findByRole("heading", { name: "Your shifts" })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("agency-post-shift-button"));
+    expect(screen.getByRole("dialog", { name: "Post shift" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await signIn("admin@sunrisehealth.example");
+    expect(await screen.findByRole("heading", { name: "Your shifts" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Role")).not.toBeInTheDocument();
+  });
+
+  it("resets the credential form when its panel unmounts and returns the next session to the marketplace", async () => {
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
+      return jsonResponse({ shifts: trialShifts });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findByRole("heading", { name: "Marketplace" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
+    const expiry = await screen.findByTestId("credential-expiry-date-input");
+    fireEvent.change(expiry, { target: { value: "2027-04-01" } });
+    fireEvent.click(screen.getByRole("tab", { name: "Marketplace" }));
+    expect(screen.queryByTestId("credential-expiry-date-input")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
+    expect(await screen.findByTestId("credential-expiry-date-input")).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findByRole("heading", { name: "Marketplace" })).toBeInTheDocument();
+    expect(screen.queryByTestId("credential-expiry-date-input")).not.toBeInTheDocument();
+  });
+
+  it("opens one publish dialog under Strict Mode and closes it without reopening", async () => {
+    installDialogClose();
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-agency", user: agencyA });
+      return jsonResponse({ agencyId: "agency-a", shifts: trialShifts.filter((shift) => shift.agencyId === "agency-a") });
+    });
+    render(
+      <StrictMode>
+        <ShiftPatchApp />
+      </StrictMode>,
+    );
+    await signIn("admin@sunrisehealth.example");
+    expect(await screen.findByRole("heading", { name: "Your shifts" })).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("agency-post-shift-button"));
+    expect(screen.getAllByRole("dialog", { name: "Post shift" })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByTestId("agency-post-shift-button")).toBeInTheDocument();
+  });
 });

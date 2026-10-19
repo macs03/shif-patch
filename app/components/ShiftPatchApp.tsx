@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 
 import { loginRequestSchema } from "@/lib/domain/schemas";
 import {
@@ -17,23 +16,13 @@ import {
   readCredential,
   submitCredential,
 } from "@/lib/client/api";
-import type { AuditEvent, CancellationReason, CredentialResponse, SessionUser, Shift } from "@/lib/domain/types";
+import type { AuditEvent, CredentialResponse, SessionUser, Shift } from "@/lib/domain/types";
 import { AdminDashboard } from "./AdminDashboard";
-import { CreateShiftForm } from "./CreateShiftForm";
-import { CredentialForm } from "./CredentialForm";
-import { NotificationBanner } from "./NotificationBanner";
-import { ShiftCard } from "./ShiftCard";
+import { AgencyDashboard } from "./AgencyDashboard";
 import { AppHeader } from "./AppHeader";
-import { Loader } from "./Loader";
-import { RoleTabs } from "./RoleTabs";
-import { IconClose, IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
-
-type NursePanel = "marketplace" | "credential";
-
-const nurseTabs = [
-  { value: "marketplace", label: "Marketplace" },
-  { value: "credential", label: "Credential" },
-] as const;
+import { LoginView } from "./LoginView";
+import { NotificationBanner } from "./NotificationBanner";
+import { NurseDashboard, type NursePanel } from "./NurseDashboard";
 
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
@@ -91,8 +80,6 @@ export function ShiftPatchApp() {
   const [admin, setAdmin] = useState<AdminState>(idleAdmin);
 
   const epoch = useRef(0);
-  const postDialog = useRef<HTMLDialogElement>(null);
-  const ignoreDialogClose = useRef(false);
   const inflight = useRef(new Set<AbortController>());
   const pendingRef = useRef<string | null>(null);
   const holdRef = useRef(false);
@@ -417,247 +404,89 @@ export function ShiftPatchApp() {
     }
   }
 
-  useEffect(() => {
-    const dialog = postDialog.current;
-    if (!creating || !dialog) return;
-    if (!dialog.open) {
-      try {
-        dialog.showModal();
-      } catch {
-        dialog.setAttribute("open", "");
-      }
-    }
-    return () => {
-      ignoreDialogClose.current = true;
-      if (dialog.open && typeof dialog.close === "function") dialog.close();
-      else dialog.removeAttribute("open");
-      ignoreDialogClose.current = false;
-    };
-  }, [creating]);
-
-  const mode = session?.user.role === "nurse" || session?.user.role === "agency" ? session.user.role : null;
-
   if (!session) {
     return (
-      <div className="auth-gate">
-        <div className="auth-card">
-          <header className="mast">
-            <p className="mark">ShiftPatch</p>
-            <h1>Sign in</h1>
-            <p className="lede">Use your staffing account to claim or publish shifts.</p>
-          </header>
-          <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
-          <form className="login" onSubmit={onLogin}>
-            <div className="field">
-              <label htmlFor="login-email">Email</label>
-              <input
-                id="login-email"
-                data-testid="login-email-input"
-                type="email"
-                autoComplete="username"
-                value={email}
-                aria-invalid={loginError ? true : undefined}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <div className="field-label-row">
-                <label htmlFor="login-password">Password</label>
-                <button
-                  type="button"
-                  className="btn btn-icon btn-icon-muted"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  title={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  aria-controls="login-password"
-                  onClick={() => setShowPassword((open) => !open)}
-                >
-                  {showPassword ? <IconEyeOff /> : <IconEye />}
-                </button>
-              </div>
-              <input
-                id="login-password"
-                data-testid="login-password-input"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                aria-invalid={loginError ? true : undefined}
-                aria-describedby={loginError ? "login-error" : undefined}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </div>
-            {loginError ? <p id="login-error" className="field-error">{loginError}</p> : null}
-            <button
-              type="submit"
-              data-testid="login-submit-button"
-              className="btn btn-primary"
-              disabled={loginPending}
-            >
-              {loginPending ? "Signing in" : "Sign in"}
-            </button>
-          </form>
-        </div>
-      </div>
+      <LoginView
+        email={email}
+        password={password}
+        showPassword={showPassword}
+        loginError={loginError}
+        loginPending={loginPending}
+        notice={notice}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onTogglePassword={() => setShowPassword((open) => !open)}
+        onSubmit={onLogin}
+      />
     );
   }
-
-  const showShiftBoard =
-    mode === "agency" || (session.user.role === "nurse" && nursePanel === "marketplace");
 
   return (
     <div className="app-frame">
       <AppHeader name={session.user.name} role={session.user.role} onSignOut={signOut} />
       <div className={session.user.role === "admin" ? "shell shell-wide" : "shell"}>
-      <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
-      {session.user.role === "nurse" ? (
-        <RoleTabs label="Nurse" idPrefix="nurse" tabs={nurseTabs} value={nursePanel} onChange={setNursePanel} />
-      ) : null}
-      {session.user.role === "admin" ? (
-        <AdminDashboard
-          shifts={admin.shifts}
-          metrics={admin.metrics}
-          shiftState={admin.status === "idle" ? "loading" : admin.status}
-          shiftError={admin.error}
-          events={admin.events}
-          auditState={admin.auditStatus === "idle" ? "loading" : admin.auditStatus}
-          auditError={admin.auditError}
-          onRefresh={() => void refresh(false)}
-        />
-      ) : null}
-      {session.user.role === "nurse" && nursePanel === "credential" ? (
-        <div
-          id="nurse-panel-credential"
-          role="tabpanel"
-          tabIndex={0}
-          aria-labelledby="nurse-tab-credential"
-        >
-          <CredentialForm
-            view={credential.view}
-            loadError={credential.error}
-            pending={credentialPending}
-            onSubmit={(document, expiresOn) => void onCredential(document, expiresOn)}
+        <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
+        {session.user.role === "nurse" ? (
+          <NurseDashboard
+            panel={nursePanel}
+            onPanelChange={setNursePanel}
+            status={list.status}
+            loadError={list.loadError}
+            shifts={list.shifts}
+            pendingKey={pendingKey}
+            hold={hold}
+            onRefresh={() => void refresh(hold)}
+            onClaim={(shiftId) => {
+              void settleMutation(session, `claim:${shiftId}`, "Shift claimed.", (signal) => (
+                claimShift(session.token, shiftId, signal)
+              ));
+            }}
+            onCancel={(shiftId, reason) => {
+              void settleMutation(session, `cancel:${shiftId}`, "Shift reopened.", (signal) => (
+                cancelShift(session.token, shiftId, reason, signal)
+              ));
+            }}
+            credentialView={credential.view}
+            credentialError={credential.error}
+            credentialPending={credentialPending}
+            onCredentialSubmit={(document, expiresOn) => void onCredential(document, expiresOn)}
           />
-        </div>
-      ) : null}
-      {showShiftBoard && mode ? (
-        <section
-          id={session.user.role === "nurse" ? "nurse-panel-marketplace" : undefined}
-          role={session.user.role === "nurse" ? "tabpanel" : undefined}
-          tabIndex={session.user.role === "nurse" ? 0 : undefined}
-          aria-labelledby={session.user.role === "nurse" ? "nurse-tab-marketplace" : undefined}
-          className="board"
-          aria-busy={list.status === "loading"}
-        >
-          <div className="board-bar">
-            <h2>{mode === "nurse" ? "Marketplace" : "Your shifts"}</h2>
-            <button
-              type="button"
-              className={`btn btn-icon btn-icon-muted${list.status === "loading" ? " btn-icon--spin" : ""}`}
-              disabled={list.status === "loading"}
-              onClick={() => void refresh(hold)}
-              aria-label="Refresh"
-              title="Refresh"
-            >
-              <IconRefresh />
-            </button>
-          </div>
-          {mode === "agency" ? (
-            <button
-              type="button"
-              data-testid="agency-post-shift-button"
-              className="btn btn-primary"
-              onClick={() => setCreating(true)}
-            >
-              Post shift
-            </button>
-          ) : null}
-          {mode === "agency" && creating
-            ? createPortal(
-              <dialog
-                ref={postDialog}
-                className="modal"
-                aria-labelledby="post-shift-title"
-                onClick={(event) => {
-                  const box = event.currentTarget.getBoundingClientRect();
-                  const inside = event.clientX >= box.left && event.clientX <= box.right
-                    && event.clientY >= box.top && event.clientY <= box.bottom;
-                  if (!inside) event.currentTarget.close();
-                }}
-                onClose={() => {
-                  if (!ignoreDialogClose.current) setCreating(false);
-                }}
-              >
-                <div className="modal-bar">
-                  <h2 id="post-shift-title">Post shift</h2>
-                  <button
-                    type="button"
-                    className="btn btn-icon btn-icon-muted"
-                    aria-label="Close"
-                    title="Close"
-                    onClick={() => {
-                      const dialog = postDialog.current;
-                      if (!dialog) return;
-                      if (typeof dialog.close === "function") dialog.close();
-                      else {
-                        dialog.removeAttribute("open");
-                        setCreating(false);
-                      }
-                    }}
-                  >
-                    <IconClose />
-                  </button>
-                </div>
-                <CreateShiftForm
-                  pending={pendingKey === "publish"}
-                  locked={hold}
-                  onSubmit={(value) => {
-                    if (!session) return;
-                    void settleMutation(session, "publish", "Shift published.", (signal) => (
-                      createShift(session.token, value, signal)
-                    ));
-                  }}
-                />
-              </dialog>,
-              document.body,
-            )
-            : null}
-          {list.status === "loading" ? <Loader label="Loading shifts" /> : null}
-          {list.loadError ? (
-            <div className="state-block">
-              <p>{list.loadError}</p>
-              <button type="button" className="btn" onClick={() => void refresh(hold)}>Try again</button>
-            </div>
-          ) : null}
-          {list.status === "ready" && list.shifts.length === 0 && !list.loadError ? (
-            <p className="state-line">No shifts to show.</p>
-          ) : null}
-          {list.shifts.length > 0 ? (
-            <ul className="cards">
-              {list.shifts.map((shift) => (
-                <ShiftCard
-                  key={shift.id}
-                  shift={shift}
-                  mode={mode}
-                  pending={pendingKey === `claim:${shift.id}` || pendingKey === `cancel:${shift.id}`}
-                  locked={hold || (pendingKey !== null && pendingKey !== `claim:${shift.id}` && pendingKey !== `cancel:${shift.id}`)}
-                  onClaim={(shiftId) => {
-                    if (!session) return;
-                    void settleMutation(session, `claim:${shiftId}`, "Shift claimed.", (signal) => (
-                      claimShift(session.token, shiftId, signal)
-                    ));
-                  }}
-                  onCancel={(shiftId, reason: CancellationReason) => {
-                    if (!session) return;
-                    void settleMutation(session, `cancel:${shiftId}`, "Shift reopened.", (signal) => (
-                      cancelShift(session.token, shiftId, reason, signal)
-                    ));
-                  }}
-                />
-              ))}
-            </ul>
-          ) : null}
-        </section>
-      ) : null}
+        ) : null}
+        {session.user.role === "agency" ? (
+          <AgencyDashboard
+            status={list.status}
+            loadError={list.loadError}
+            shifts={list.shifts}
+            pendingKey={pendingKey}
+            hold={hold}
+            creating={creating}
+            onOpenCreate={() => setCreating(true)}
+            onCloseCreate={() => setCreating(false)}
+            onRefresh={() => void refresh(hold)}
+            onPublish={(value) => {
+              void settleMutation(session, "publish", "Shift published.", (signal) => (
+                createShift(session.token, value, signal)
+              ));
+            }}
+            onCancel={(shiftId, reason) => {
+              void settleMutation(session, `cancel:${shiftId}`, "Shift reopened.", (signal) => (
+                cancelShift(session.token, shiftId, reason, signal)
+              ));
+            }}
+          />
+        ) : null}
+        {session.user.role === "admin" ? (
+          <AdminDashboard
+            shifts={admin.shifts}
+            metrics={admin.metrics}
+            shiftState={admin.status === "idle" ? "loading" : admin.status}
+            shiftError={admin.error}
+            events={admin.events}
+            auditState={admin.auditStatus === "idle" ? "loading" : admin.auditStatus}
+            auditError={admin.auditError}
+            onRefresh={() => void refresh(false)}
+          />
+        ) : null}
       </div>
     </div>
   );
