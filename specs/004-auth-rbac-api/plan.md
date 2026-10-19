@@ -105,6 +105,8 @@ Cancellation and timezone decisions are resolved. Current project Auth settings,
 
 ## Implementation sequence
 
+Hardening follow-up (2026-10-19): [009](../009-security-hardening/plan.md) owns the user-authorized 64 KiB JSON request bound and generic upstream password-login 429. Its shared server reader also preserves multipart upload bounds. Existing success payloads, roles and business flows remain intact; actual current checks and limitations are recorded in 009/tasks.md rather than inferred from this historical implementation plan.
+
 1. Confirm hosted target/settings; add identity column, provision/link exact accounts and verify safe profile access.
 2. Implement request-scoped auth, verification and login; test all sample identities and token failures.
 3. Add read policies and secured mutation functions; verify directly in Supabase.

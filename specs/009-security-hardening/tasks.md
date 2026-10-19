@@ -10,13 +10,13 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | T01 | P2 / S02 | R01,R06 / AC01, AC07–AC08 | Release/cancel upload reader in `lib/server/credentials.ts`; focused unit tests | T00 | Completed | Same 400/413 and valid-upload behavior; reader cleanup asserted including failure paths |
 | T02 | P2 / S04 | R02,R06 / AC02, AC07–AC08 | Validate audit RPC envelope in `lib/server/db.ts`; route/unit tests | T00; null is not an empty audit | Completed | Malformed non-null payload fails generically; valid/empty arrays and role checks unchanged |
 | T03 | P2 / S03 | R03,R06 / AC03, AC07–AC08 | Observe cleanup failure/deferral in `lib/server/credentials.ts`; tests | T00 | Completed | Sanitized server signal, no public response change or unsafe deletion; unresolved retention remains explicit |
-| T04 | P2 / S01 | R04,R06 / AC04, AC07–AC08 | Define JSON size/error contract across `readJson` and its four route callers before a bounded-reader implementation | Q01 | Deferred | No threshold approved. `readJson` unchanged |
-| T05 | P2 / S05 | R04–R06 / AC05–AC08 | Assess Auth/edge limits and 429 translation in `lib/server/auth.ts`; propose compatible strategy | Q02, Q04 for deployed evidence | Assessed | 429 stays generic 500 until a status is approved. Deployed limits unknown |
+| T04 | P2 / S01 | R04,R06 / AC04, AC07–AC08 | Implement 64 KiB bounded JSON reading using shared HTTP reader; retain multipart limits | Q01 resolved by user clarification | Completed | Streaming bytes/cleanup/no-write boundaries and normal API flows verified; 58 local tests, typecheck/lint passed |
+| T05 | P2 / S05 | R04–R06 / AC05–AC08 | Implement generic upstream password-login 429; deployed control assessment remains limited | Q02 resolved; Q04 for deployed evidence | Completed | Generic 429 without provider details; normal 401/login/retry verified; deployed limits unknown |
 | T06 | P2 assessment / V01 | R05–R06 / AC06–AC08 | Assess direct Storage/RPC path, deployed grants/RLS and route/content-validation coverage; no SQL edits | Q03–Q04 | Assessed | Static gap recorded. No hosted probe or privilege change |
 | T07 | Verification | R06 / AC07–AC08 | Review completed task diffs, regressions and relevant feature documentation; record final checks | Implemented tasks only | Completed | Node 24.22.0 typecheck, lint, unit/UI and build passed. Q01–Q04 remain open |
 | T08 | P3 candidate / C01 | R06–R07 / AC07–AC09 | Use the Zod parse result in `CreateShiftForm.tsx` | T00; necessity/compatibility gate | Completed | Field errors and pending/locked behavior kept. Existing create UI tests passed |
 | T09 | P3 candidate / C02 | R06–R07 / AC07–AC08, AC10 | Remove unread `CredentialState.status` and its writes in `ShiftPatchApp.tsx` | T00; reader search found no `credential.status` | Completed | Pending flag, view/error display and read tickets kept. UI credential tests passed |
-| T10 | P3 candidate / C03 | R06–R07 / AC07–AC08, AC11 | Assess sharing the existing `expire`/`signOut` reset code without changing notices or lifecycle | T00; necessity/compatibility gate | Deferred | Notices differ and both paths are short. No shared helper |
+| T10 | P3 / C03 | R06–R07 / AC07–AC08, AC11 | Share duplicated session-reset operations with separate caller notices | User clarified readability scope | Completed | Same cleared fields, refs, invalidation and stable effect dependencies; session/401 regressions passed |
 | T11 | Regression coverage | R01,R03,R06 / AC01, AC03, AC07–AC08 | Verify reader release on valid upload and active-document preservation after a lost finalize response | T01, T03 | Completed | Saved public metadata returned with 200 and no deletion; valid-upload reader unlocked; 47 tests/typecheck/lint passed; final focused checks passed |
 
 Statuses are task delivery status, not vulnerability severity. T04–T06 do not change contracts, provision services or mutate the database.
@@ -30,13 +30,13 @@ T08–T10 are optional code-quality assessments. Record a justified deferral/no-
 | AC01 | T01 | Oversized stream returns 413, cancels unread bytes and unlocks the reader. Cleanup exceptions do not replace 413. A failed read stays 400 |
 | AC02 | T02 | `read_audit_events` is `RETURNS TABLE`, so an empty history is `[]`. `null`, objects and scalars return 500. Empty and valid arrays stay 200 |
 | AC03 | T03 | Failed superseded/orphan removal and unreadable reconciliation log `{event,reason}` only. Success and the original error stay unchanged. Active objects are not removed |
-| AC04 | T04 | Threshold still unresolved. No request that previously succeeded is newly rejected |
-| AC05 | T05 | `loginFailure` maps provider 429 to generic 500. No new status or limiter |
+| AC04 | T04 | Actual 64 KiB byte limit and generic 413 implemented; absent/understated length, UTF-8, cleanup and no mutation/login work tested |
+| AC05 | T05 | Provider password-login 429 maps to generic 429; UI retries and logs in successfully; no guessed retry timing or new limiter |
 | AC06 | T06 | File signatures are checked in `saveCredential` only. Storage insert and `finalize_credential` remain authenticated own-prefix checks. Deployed policies were not queried |
-| AC07–AC08 | T01–T03, T07–T09 | Focused tests plus unit/UI, typecheck, lint and build on Node 24.22.0. No new regression |
+| AC07–AC08 | T01–T05, T07–T11 | Current 58 unit/UI tests and typecheck/lint passed on Node 24.22.0; build outcome in current execution log. Earlier builds remain historical |
 | AC09 | T08, T07 | Submit uses `parsed.data`. Field messages unchanged |
 | AC10 | T09, T07 | Refreshed search found no `credential.status` reader. The property and its writes are gone |
-| AC11 | T10, T07 | Shared reset deferred. `expire` and `signOut` notices stay distinct |
+| AC11 | T10, T07 | Shared stable reset callback implemented; logout/expiry notices remain separate and session regressions pass |
 
 AC07–AC08 also govern any implementation arising from T08–T10; their presence does not waive compatibility or regression checks.
 
@@ -79,3 +79,10 @@ AC07–AC08 also govern any implementation arising from T08–T10; their presenc
 - `npm run typecheck` and `npm run lint` exited 0 on Node 24.22.0. No new build: production code remained unchanged from the user's recorded successful build; that result remains historical, not this turn's execution. No browser, hosted policy, file or mutation probes, dependencies, commit or publication.
 - Next.js feedback reporting pass: no new qualifying issue observed; prior reports not duplicated. Evidence remains in native conversation; complete private post-turn export pending. This summary is not a transcript; no shared transcript copy/redactions produced.
 - Final review: documentation links/placeholders/whitespace and `git diff --check` passed. Another process committed the prior compatible changes during this turn (`ecb88b7`); this agent did not create that commit. Reviewed the remaining diff against refreshed HEAD: only the new test/reader assertion and follow-up spec/plan/tasks edits remain.
+
+### 2026-10-19 — Further logic-change scope proposal
+
+- Actual agent: primary Codex agent only; no delegation. Initial working tree clean at HEAD `704748d`.
+- User requested logic aligned with best practices. Existing compatibility constraints and explicit Q01/Q02 gates remain in force, so requested clarification on allowing a 64 KiB JSON limit/413 and generic upstream-login 429. Recorded concrete files, semantics and checks in plan.md; no runtime/API contract changes implemented pending that answer.
+- Re-read affected HTTP/auth code, route callers, client error handling, route tests and 009 documents; consulted Ponytail/security rules, bundled Route Handler guidance and current primary OWASP/Supabase references. Q03/Q04 remain open. No new dependencies, hosted operations or secrets accessed.
+- No application checks rerun for this proposal-only scope. Native conversation preserves prompts/tool outputs; complete private post-turn export pending. No commit/publication. Next.js feedback pass: no new qualifying issue.

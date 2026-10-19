@@ -46,6 +46,32 @@ describe("ShiftPatchApp", () => {
     jest.restoreAllMocks();
   });
 
+  it.each([
+    { status: 429, message: "Too many requests. Try again later." },
+    { status: 413, message: "Request body too large" },
+  ])("allows login retry after a $status response", async ({ status, message }) => {
+    let rejected = true;
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) {
+        return rejected
+          ? jsonResponse({ error: message }, status)
+          : jsonResponse({ token: "token-nurse", user: nurse });
+      }
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
+      return jsonResponse({ shifts: trialShifts });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("maria.lopez@example.com");
+    await waitFor(() => expect(screen.getByTestId("notification-banner")).toHaveTextContent(message));
+    expect(screen.getByTestId("login-submit-button")).toBeEnabled();
+    expect(calls("/api/auth/login")).toHaveLength(1);
+    rejected = false;
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(3);
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(screen.getByTestId("login-password-input")).toHaveValue("");
+  });
+
   it("toggles password visibility without clearing the value", () => {
     render(<ShiftPatchApp />);
     const password = screen.getByTestId("login-password-input");

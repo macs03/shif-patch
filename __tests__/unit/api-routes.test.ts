@@ -152,6 +152,48 @@ describe("API route contracts", () => {
     expect(await bodyOf(response)).toEqual({ error: "Invalid email or password" });
   });
 
+  it("returns generic 429 when password login is throttled", async () => {
+    mockSignInWithPassword.mockResolvedValue({
+      data: { session: null },
+      error: { status: 429, code: "over_request_rate_limit", message: "private provider details" },
+    });
+    const { POST } = await import("@/app/api/auth/login/route");
+    const response = await POST(request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: "maria.lopez@example.com", password: "Trial2026!" }),
+    }));
+    expect(response.status).toBe(429);
+    expect(await bodyOf(response)).toEqual({ error: "Too many requests. Try again later." });
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.has("retry-after")).toBe(false);
+    expect(mockGetUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects oversized JSON before login or shift mutation work", async () => {
+    const { POST: login } = await import("@/app/api/auth/login/route");
+    const { POST: create } = await import("@/app/api/shifts/route");
+    const { POST: claim } = await import("@/app/api/shifts/[id]/claim/route");
+    const { POST: cancel } = await import("@/app/api/shifts/[id]/cancel/route");
+    const input = (path: string) => request(path, {
+      method: "POST",
+      headers: { authorization: "Bearer token" },
+      body: " ".repeat(65_537),
+    });
+    const context = { params: Promise.resolve({ id: "shift-1" }) };
+    for (const run of [
+      () => login(input("/api/auth/login")),
+      () => create(input("/api/shifts")),
+      () => claim(input("/api/shifts/shift-1/claim"), context),
+      () => cancel(input("/api/shifts/shift-1/cancel"), context),
+    ]) {
+      const response = await run();
+      expect(response.status).toBe(413);
+      expect(await bodyOf(response)).toEqual({ error: "Request body too large" });
+    }
+    expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
   it("rejects a mapped login when the application profile is missing", async () => {
     profile = null;
     mockSignInWithPassword.mockResolvedValue({

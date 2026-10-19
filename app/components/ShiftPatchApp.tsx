@@ -113,7 +113,7 @@ export function ShiftPatchApp() {
     clearPending();
   }, [clearPending]);
 
-  const expire = useCallback(() => {
+  const resetSession = useCallback(() => {
     invalidate();
     setHoldBoth(false);
     setSession(null);
@@ -128,8 +128,12 @@ export function ShiftPatchApp() {
     setCredentialPending(false);
     credentialLock.current = false;
     setAdmin(idleAdmin);
-    setNotice({ tone: "error", message: EXPIRED });
   }, [invalidate, setHoldBoth]);
+
+  const expire = useCallback(() => {
+    resetSession();
+    setNotice({ tone: "error", message: EXPIRED });
+  }, [resetSession]);
 
   const load = useCallback(async (
     target: Session,
@@ -175,11 +179,7 @@ export function ShiftPatchApp() {
         return;
       }
       const message = error instanceof ApiError ? error.message : "Credential could not be loaded.";
-      setCredential((prev) => (
-        prev.view
-          ? { view: prev.view, error: message }
-          : { view: null, error: message }
-      ));
+      setCredential((prev) => ({ view: prev.view, error: message }));
     }
   }, [expire]);
 
@@ -372,21 +372,8 @@ export function ShiftPatchApp() {
   }
 
   function signOut() {
-    invalidate();
-    setHoldBoth(false);
-    setSession(null);
-    setCreating(false);
-    setEmail("");
-    setPassword("");
-    setShowPassword(false);
-    setNursePanel("marketplace");
-    setLoginError("");
+    resetSession();
     setNotice(null);
-    setList({ status: "ready", shifts: [], loadError: null });
-    setCredential(idleCredential);
-    setCredentialPending(false);
-    credentialLock.current = false;
-    setAdmin(idleAdmin);
   }
 
   async function onCredential(document: File, expiresOn: string) {

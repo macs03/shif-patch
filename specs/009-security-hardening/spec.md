@@ -1,6 +1,6 @@
 # Security and Code Quality Improvements — Specification
 
-Feature ID: 009-security-hardening · Date: 2026-10-19 · Status: Compatible corrections implemented; Q01–Q04 still pending
+Feature ID: 009-security-hardening · Date: 2026-10-19 · Status: Local hardening implemented; Q03–Q04 and deployed verification remain open
 
 Source: user request to identify code vulnerabilities and gaps in good practices, prepare a plan and create improvement tasks. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Follows [008](../008-consistency-audit/tasks.md); preserves features 004–006 contracts and 007 verification exclusions.
 
@@ -12,7 +12,7 @@ The previous consistency audit and stale-response corrections do not certify eve
 
 - Included now: code review, bounded local diagnostics, a prioritized finding register, compatible correction proposals, verification tasks and explicit decisions for changes that affect accepted requests or API statuses.
 - Also included: candidate improvements to validated form submission, unused credential state and duplicated session reset. These are maintainability opportunities, not demonstrated vulnerabilities; assess necessity before implementing them.
-- The user subsequently authorized compatible implementation and remaining necessary checks. Preserve the delivered corrections; unresolved Q01–Q04 do not authorize contract or permission changes. No new dependencies, scripts, paid services, database writes, external settings, commits or publication.
+- The user clarified that compatibility means preserving functional flows and business rules, rather than freezing internal code or all error statuses. Implement the proposed Q01/Q02 hardening and targeted API/React readability improvements; Q03/Q04 do not authorize privilege or deployment changes. No new dependencies, scripts, paid services, database writes, external settings, commits or publication.
 - Preserve login/session behavior, cross-agency reads, own-agency writes, role permissions, credential expiry, atomic claims/cancellations, exact fixtures, full response fields and test IDs.
 - No cosmetic cleanup, generic architecture rewrite, speculative caching or broad helper extraction. Existing F01/F02 corrections remain intact.
 - Hosted file/mutation probes, new test accounts and the withdrawn browser E2E suite remain outside current scope. A verification proposal does not authorize executing those operations.
@@ -34,8 +34,8 @@ The previous consistency audit and stale-response corrections do not certify eve
 | AC01 | An upload exceeds the existing streaming byte limit, completes or fails while reading | Cancel unread data when appropriate and release the reader lock; preserve current 400/413 errors and prevent cleanup errors from replacing the original failure |
 | AC02 | Audit RPC returns an array, an empty array or an unexpected non-null object/scalar | Valid/empty arrays retain their current response; malformed data becomes the existing generic internal error, never a successful empty audit. Resolve null semantics explicitly against the RPC before implementation |
 | AC03 | Superseded/orphan object removal fails, or finalization cannot be reconciled | Record a bounded server-side event without tokens, object paths, document names or raw provider errors; retain the original save/error response, never delete a possibly active document, and record manual follow-up as pending |
-| AC04 | A JSON size limit is proposed | Resolve byte threshold, streaming enforcement and exact oversized response before implementation; retain normal body/schema behavior, including empty claim bodies. An assumed threshold is not authorization to reject previously accepted requests |
-| AC05 | Supabase Auth throttles login | Document existing provider controls and the current generic-500 translation; resolve whether and how to expose throttling without changing generic credential errors or adding an unapproved response status |
+| AC04 | JSON login/create/claim/cancel body is read | Enforce a 65,536-byte streaming bound, including whitespace and UTF-8 bytes, irrespective of missing/understated Content-Length; larger bodies return 413 `{error:"Request body too large"}` before password login or mutation work. Protected routes still authenticate first. Preserve empty claim bodies, ordinary schemas and multipart upload limits; clean up readers without masking the primary error |
+| AC05 | Supabase Auth throttles password login | Return 429 `{error:"Too many requests. Try again later."}` with no raw provider details, invented Retry-After or automatic retry. Invalid credentials remain generic 401; the UI can retry and complete login after throttling clears |
 | AC06 | Direct Storage/RPC access or deployed security controls are assessed | Distinguish route validation from provider policy enforcement. Record evidence or an explicit gap for own/foreign access, file-content validation, private storage, grants and abuse limits; no claim of a deployed bypass without reproduction |
 | AC07 | A later task is implemented | Evidence justifies the smallest complete correction; all callers, error paths and contracts remain compatible. Contract/permission changes stay behind a separate decision and affected-feature specification update |
 | AC08 | A later task closes | Record failing baseline where applicable, passing focused regression and relevant suites, typecheck/lint, supported-runtime build outcome, limitations and private transcript status; new regressions prevent completion |
@@ -45,12 +45,12 @@ The previous consistency audit and stale-response corrections do not certify eve
 
 ## Contracts and open decisions
 
-No new runtime behavior is approved by this planning artifact. Compatible tasks preserve existing success/error shapes and the exact fixture/business contracts. JSON byte limits and exposing 429 are behavior changes even if useful security hardening; do not present them as pure refactors.
+User clarification authorizes the documented JSON limit/413 and login 429 behavior changes; these are security hardening, not pure refactors. Preserve successful response shapes, exact fixture/business contracts and all normal user flows. Readability refactors must retain behavior and pass existing regression tests.
 
 | ID | Decision or prerequisite | Affected tasks | Current resolution |
 | --- | --- | --- | --- |
-| Q01 | JSON maximum bytes and exact oversized response across login/create/claim/cancel | T04 | Still pending. No threshold or 413 extension approved, so `readJson` is unchanged |
-| Q02 | Public representation of upstream Auth 429 and any retry guidance | T05 | Still pending. A provider 429 currently becomes generic 500; 401 credential errors stay generic |
+| Q01 | JSON maximum bytes and exact oversized response across login/create/claim/cancel | T04 | Resolved by user's compatibility clarification: implement proposed 64 KiB streaming cap and generic 413; preserve functional flows |
+| Q02 | Public representation of upstream Auth 429 and any retry guidance | T05 | Resolved by same clarification: generic 429 message above; no invented retry timing or new limiter |
 | Q03 | Expected enforcement of file-signature validation for direct authenticated Storage/RPC callers | T06 | Assessed as a static gap. Signature checks remain route-only. No privilege change |
 | Q04 | Current deployed RLS/bucket/rate-limit state and safe verification access | T05–T06 | Not inspected. No hosted probe or fixture mutation |
 

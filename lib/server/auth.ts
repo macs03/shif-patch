@@ -21,6 +21,7 @@ function unavailable(error: AuthFailure): boolean {
 }
 
 function loginFailure(error: AuthFailure): HttpError {
+  if (error.status === 429) return new HttpError(429, "Too many requests. Try again later.");
   if (unavailable(error)) return new HttpError(503, "Service unavailable");
   if (
     error.code === "invalid_credentials" ||

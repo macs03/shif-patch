@@ -1,6 +1,6 @@
 # Security and Code Quality Improvements — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Compatible tasks implemented; contract decisions pending
+Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Local hardening and readability changes implemented; deployed controls unverified
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Baseline: clean working tree at HEAD `36c62a2` before this planning session.
 
@@ -45,8 +45,21 @@ Suggested candidate order after compatible hardening: T08 first; T09/T10 only wh
 
 ## Decisions and verification work
 
-4. **T04 / R04:** propose a justified byte limit from actual JSON contracts and current hosting constraints. Resolve Q01 before coding or changing 004 specs. Count actual bytes, not just Content-Length; bound padding/unknown fields too. Preserve normal schemas/empty claim behavior and no-write-on-rejection. New limits/statuses are gated behavior changes, not automatically authorized refactors.
-5. **T05 / R04–R05:** inspect configured Supabase/edge limits and server-proxy behavior read-only when access exists; record absent access as unverified. Supabase already documents Auth rate limiting and 429, with IP-based behavior; do not assume the proxy retains end-user IP identity. Do not forward arbitrary client IP headers or add secret credentials. Resolve Q02 before changing status handling, retry headers or adding a limiter. A per-process counter is not a reliable distributed protection.
+### Concrete Q01/Q02 implementation — authorized scope clarification
+
+The user clarified on 2026-10-19 that functional flows/business rules must remain intact, while API/frontend code and error behavior may improve. Q01/Q02 below are authorized. Preserve the original planning paragraphs as history; this resolution supersedes their decision gates for these two items only.
+
+- Q01: cap JSON request bodies at 65,536 bytes (64 KiB), including whitespace and multibyte content, across the existing `readJson` callers. This is a project choice with ample headroom for the current short form payloads, not an OWASP-mandated number. Reject larger bodies with `413 {error:"Request body too large"}`; preserve current empty-body, JSON and schema behavior below the limit. Count streamed bytes even when Content-Length is absent or understated; cancel unread input and release the reader without masking the primary error. Do not apply this JSON cap to the separately bounded multipart credential upload.
+- Q02: translate upstream Auth status 429 at password login into `429 {error:"Too many requests. Try again later."}` before generic error classification. Keep credential failures generic 401. Preserve the existing error shape and no-store responses; do not invent a Retry-After duration, add automatic retries, introduce an application limiter or forward client IP headers.
+- Proposed files: `lib/server/http.ts`, `lib/server/auth.ts`, focused route/unit tests, and affected 004/009 contract documents. The current client already parses `{error:string}` and can display these failures; verify retry usability in the existing UI harness without changing successful login/session behavior.
+- Required tests after resolution: below/exactly/above byte limit, UTF-8 byte counting, misleading/missing Content-Length, stream cleanup/failure, no provider/mutation calls after rejection, empty claim bodies and normal requests; upstream 429 generic response with no raw provider details plus unchanged invalid-credential handling. Run unit/UI, typecheck and lint under Node 24; record build/environment outcome separately.
+
+Implement shared bounded reading in the existing HTTP helper and reuse it for the already bounded credential upload, preserving that upload's exact limits/messages and cleanup behavior. Reuse native TextDecoder and current Zod schemas. Q03/Q04 require their own evidence and design and are not resolved by this change.
+
+React readability scope: share the exact reset operations already duplicated by `expire` and `signOut` in a stable component-local callback, leaving each caller's notice explicit; remove the now-redundant credential error-state conditional left by T09. Keep refs, request tickets, effect dependencies and all reset behavior. This reopens T10 under the clarified request to improve readability; no global state library or generic hook. Existing session/401/stale-response tests plus a login-throttle/retry UI test verify preserved flows. No visual redesign.
+
+4. **T04 / R04:** implement the resolved 64 KiB JSON limit at the shared reader, counting actual bytes rather than trusting Content-Length. Preserve ordinary schemas/empty claim behavior and no-write-on-rejection. This is explicitly authorized input hardening, not a pure refactor. Multipart uploads retain their independent limit and error text.
+5. **T05 / R04–R05:** translate provider password-login 429 to the resolved generic response. Configured Supabase/edge limits and server-proxy behavior remain unverified without deployed access. Supabase already documents Auth rate limiting and 429, with IP-based behavior; do not assume the proxy retains end-user IP identity. Do not forward arbitrary client IP headers, add secret credentials, guess retry timing or add a per-process limiter. This task improves error handling, not deployed abuse protection.
 6. **T06 / R05:** compare Next.js validation with Storage/RPC grants and deployed policies read-only first. Document whether content validation is intentionally route-only and assess own-prefix direct uploads/finalization, active-object deletion and metadata consistency. Do not claim a bypass from a policy listing alone. If a live probe is necessary, prepare a separate isolated, fixture-safe procedure and obtain authorization before any upload/mutation. No new project, credentials, migrations or permission changes in this planning request.
 
 ## Authorized regression follow-up — T11 / AC01, AC03, AC07–AC08
@@ -69,7 +82,7 @@ Review of delivered code found no further justified production refactor within t
 
 Each compatible task first gets a small regression test against current behavior, then a focused implementation and the relevant unit/UI suites. Run sequentially on installed Node 24: `npm run typecheck`, `npm run lint`, `npm test -- --selectProjects unit --selectProjects ui --runInBand`, and `npm run build`; do not run default/hosted mutation suites. Record environmental build failures honestly; 008 recorded a Turbopack port-permission failure despite escalation. No build workaround is part of this work.
 
-Sequence: T01 → T02 → T03, with relevant checks for each; T04–T06 remain assessment/decision work until prerequisites are resolved. Assess T08 → T09 → T10 as lower-priority code-quality candidates; implement only justified compatible changes. T07 consolidates checks and source/spec consistency for delivered tasks, including any delivered candidates; it cannot close unresolved decisions or certify hosted security. Update affected feature contracts before any separately authorized behavior change. Review diff, documentation links and secret exposure without printing secret values. No blanket claim that nothing can break.
+Sequence: T01–T03 and T08–T09 are delivered. User clarification resolved T04/T05 and reopened T10 for targeted readability; implement and verify those without altering business flows. T06 remains an assessment with Q03/Q04 open. T07 consolidates checks and source/spec consistency; it cannot certify hosted security. Review diff, documentation links and secret exposure without printing secret values. No blanket claim that nothing can break.
 
 ## Primary references checked on 2026-10-19
 

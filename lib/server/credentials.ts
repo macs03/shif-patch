@@ -10,7 +10,7 @@ import { calendarDate, credentialResponseSchema } from "../domain/schemas";
 import type { CredentialResponse } from "../domain/types";
 import type { Caller } from "./auth";
 import { throwDataError } from "./db";
-import { HttpError } from "./http";
+import { HttpError, readBody } from "./http";
 import { createDataClient, supabaseConfig } from "./supabase";
 
 type CredentialRow = {
@@ -31,59 +31,6 @@ function issueStatus(issue: DocumentIssue): HttpError {
   if (issue === "oversize") return new HttpError(413, "File too large");
   if (issue === "unsupported") return new HttpError(415, "Unsupported document type");
   return new HttpError(400, "Invalid request");
-}
-
-async function boundedBody(request: Request): Promise<Uint8Array> {
-  const declared = request.headers.get("content-length");
-  if (declared !== null) {
-    if (!/^\d+$/.test(declared)) throw new HttpError(400, "Invalid request");
-    if (Number(declared) > MAX_CREDENTIAL_BODY_BYTES) throw new HttpError(413, "File too large");
-  }
-  if (!request.body) throw new HttpError(400, "Invalid request");
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let total = 0;
-  let failure: HttpError | null = null;
-  try {
-    while (true) {
-      let step: ReadableStreamReadResult<Uint8Array>;
-      try {
-        step = await reader.read();
-      } catch {
-        failure = new HttpError(400, "Invalid request");
-        break;
-      }
-      if (step.done) break;
-      if (!step.value) continue;
-      total += step.value.byteLength;
-      if (total > MAX_CREDENTIAL_BODY_BYTES) {
-        failure = new HttpError(413, "File too large");
-        break;
-      }
-      chunks.push(step.value);
-    }
-  } finally {
-    if (failure) {
-      try {
-        await reader.cancel();
-      } catch (cleanupError) {
-        void cleanupError;
-      }
-    }
-    try {
-      reader.releaseLock();
-    } catch (cleanupError) {
-      void cleanupError;
-    }
-  }
-  if (failure) throw failure;
-  const body = new Uint8Array(total);
-  let offset = 0;
-  for (const chunk of chunks) {
-    body.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return body;
 }
 
 async function formFrom(request: Request, body: Uint8Array): Promise<FormData> {
@@ -183,7 +130,7 @@ async function removeObject(token: string, path: string): Promise<boolean> {
 
 export async function saveCredential(caller: Caller, request: Request): Promise<CredentialResponse> {
   if (caller.role !== "nurse") throw new HttpError(403, "Forbidden");
-  const body = await boundedBody(request);
+  const body = await readBody(request, MAX_CREDENTIAL_BODY_BYTES, "File too large");
   const form = await formFrom(request, body);
   const document = await oneDocument(form);
   const date = expiresOn(form);

@@ -70,6 +70,8 @@ Admin remains read-only and uses global listing. Baseline agency-a list is shift
 
 Additional feature error decisions: 400 `Invalid request`; 401 `Unauthorized`; 403 `Forbidden`; 404 `Shift not found`; 409 `Shift is not available` for claim of a filled shift, or `Shift is not filled` for cancellation of an open shift; 500 `Internal server error` for unexpected internal failure; 503 `Service unavailable` for detected upstream unavailability. Preserve exact packet login/credential messages. Authenticate before role checks; check authorization before returning resource details. Unsupported non-HEAD/OPTIONS methods return 405 `{error:"Method not allowed"}`; retain normal HTTP HEAD/OPTIONS semantics.
 
+Hardening authorized on 2026-10-19 under [009](../009-security-hardening/spec.md): JSON request bodies on login/create/claim/cancel are limited to 65,536 actual bytes, including whitespace. Exceeding the limit returns 413 `{error:"Request body too large"}`; accepted bodies keep existing parsing/schema rules, including empty claim requests. Supabase password-login throttling returns generic 429 `{error:"Too many requests. Try again later."}`; no guessed Retry-After duration or automatic retry. Success payloads, role permissions and business rules remain unchanged.
+
 ## Questions and decisions
 
 | ID | Decision | Resolution and source |
