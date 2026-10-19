@@ -401,6 +401,7 @@ export function ShiftPatchApp() {
     try {
       const view = await submitCredential(session.token, document, expiresOn, controller.signal);
       if (epoch.current !== snap) return;
+      credentialReads.current += 1;
       setCredential({ status: "ready", view, error: null });
       setNotice({
         tone: view.status === "expired" ? "error" : "success",

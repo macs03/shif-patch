@@ -14,7 +14,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | T04 | R02–R03 / AC02–AC03 | Review UI consistency, keyboard/accessibility and responsive states | T03 | Completed | Hallmark audit with locked design; actual browser coverage or limits |
 | T05 | R04 / AC04–AC05 | Review tests/CI/docs; run available planned quality checks | T02–T04, T07 | Completed | Actual commands/results, failures/skips and evidence limits |
 | T06 | R01–R06 / AC01–AC10 | Consolidate findings; apply necessity/compatibility gate to proposals | T01–T05, T07 | Completed | Every area has a disposition; F01 has necessity evidence, callers, invariants and before/after results |
-| T08 | R06 / AC10–AC11 | Close credential/admin stale-response regression gaps; invalidate old credential reads after successful save | T06 | In progress | Reproduce credential failure; focused and full local tests, typecheck/lint; record results without claiming hosted verification |
+| T08 | R06 / AC10–AC11 | Close credential/admin stale-response regression gaps; invalidate old credential reads after successful save | T06 | Completed | Credential baseline reproduced; 43 unit/UI tests, typecheck and lint passed; diff reviewed. Additional build check blocked by environment, including escalated retry |
 
 ## Coverage
 
@@ -30,7 +30,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | AC08 | T07, T06 | No contract-breaking security defect. Abuse limits and deployed transport settings are gaps, not code changes |
 | AC09 | T06 | F01 only. Duplicated handlers and missing arrow-key tabs do not justify edits |
 | AC10 | T05, T06 | F01 baseline failed, then unit/UI, typecheck, lint and build passed |
-| AC11 | T08 | Follow-up tests and credential correction pending |
+| AC11 | T08 | Late credential success/401 and overlapping admin refreshes covered; 43 local tests passed |
 
 ## API security matrix
 
@@ -65,6 +65,20 @@ Shared controls: Bearer parsed inside each protected handler; `Cache-Control: no
 - Validation: the new UI test failed before the guard and passed after it. Full unit and UI suites passed.
 
 Disposition: necessary compatible refactor, applied.
+
+### F02 — initial credential read overwrites a saved upload
+
+- Category: reliability. Priority: P2. Requirements: R06 / AC10–AC11; preserves 006 credential status behavior.
+- Location: `app/components/ShiftPatchApp.tsx`, `onCredential` and `loadCredential`.
+- Trigger: the initial credential GET remains pending while the nurse saves a document; that GET settles after the successful POST.
+- Consequence: a successful old GET replaces the saved expired status with the previous valid status; an old 401 instead clears the current session despite the successful save. Server claim validation stays authoritative, but the UI becomes misleading.
+- Necessity/evidence: new deferred-response cases reproduced both failures before the correction. Leaving the code unchanged preserves a demonstrated race, not merely inconsistent formatting.
+- Correction: increment the existing credential read counter after a successful save and the session-epoch check, before applying the new view. Failed uploads do not invalidate the initial GET. No additional helper, state or request needed.
+- Callers: initial nurse effect invokes `loadCredential`; the existing credential form invokes `onCredential`. Admin refresh retains its existing guard and now has explicit dashboard/audit regression coverage.
+- Compatibility: no API, validation, permission, expiry, persistence or fixture changes. Existing upload error handling and session checks retained.
+- Validation: two new credential timing cases failed before the one-line correction; all 43 unit/UI tests passed afterwards, including the original upload case and newest-admin-snapshot check.
+
+Disposition: necessary compatible correction, applied in T08. Deployment/security checks remain outside this result.
 
 ### Reviewed and left unchanged
 
@@ -118,3 +132,15 @@ Disposition: necessary compatible refactor, applied.
 - Browser on the already running `http://localhost:3000` dev server: nurse login, credential tab, sign-out cleared the password, agency list and post-shift modal, Close returned focus to Post shift, admin Operations/Audit/Scheduled hours and the Open metric filter. No claim, cancel, publish or credential upload. `127.0.0.1` did not hydrate because Next blocked the dev resource; localhost did. Login card remained usable at a 375px emulation. 320, 414 and 768 were not captured. Synthetic Escape did not close the modal.
 - Next.js feedback candidates: sandbox `uv_interface_addresses` failure while starting `next dev`, and the 127.0.0.1 dev-origin block. Reporting pass follows this log.
 - Evidence: this log is a summary. Private native export remains pending. No commit or publication.
+
+### 2026-10-19 — T08 credential consistency and sibling regression coverage
+
+- Actual agent: primary Codex agent only; no delegation. User authorized the next improvement phase while retaining compatibility and strict necessity constraints.
+- Preserved existing F01 changes; extended spec/plan/tasks before implementation. Reviewed credential effect/read/upload callers, session guards, admin refresh/state, response schemas, existing tests, feature 006 contracts/plan/tasks, Ponytail, Vercel React guidance and bundled Next.js Jest documentation. No dependency or tool installation.
+- F02 baseline command on Node 24.22.0: `npm test -- --selectProjects ui --runInBand -t 'initial credential read|newest admin dashboard'` exited 1: 2 failed (late credential success and late 401), 2 passed, 13 intentionally unselected. This proves an additional race beyond F01. The successful upload case now invalidates the earlier GET with one counter increment.
+- After correction: `npm test -- --selectProjects unit --selectProjects ui --runInBand` exited 0, 6 suites/43 tests passed, zero skipped. `npm run typecheck` and `npm run lint` exited 0 under the installed Node 24.22.0. Existing upload test was parameterized rather than duplicated; admin snapshot test exercises the existing F01 guard without production changes there.
+- Additional `npm run build` failed (exit 1) while processing CSS because Turbopack's helper could not bind a local port: Operation not permitted. Retried with `require_escalated`; same error and exit 1. Do not interpret this as a successful production build or change configuration to bypass it. The external lockfile warning also appeared. No new browser, hosted/RLS or mutation verification performed.
+- Reviewed diff and documentation links/placeholders/whitespace/AC11 coverage; `git diff --check` passed. No API, business rule, permission, database, fixture or visual changes. The only production line authored here invalidates stale credential reads after a successful save.
+- Concurrent repository event: another process committed the earlier audit and follow-up planning during this turn, moving HEAD from `632f77f` to `2406c20`. This agent did not commit or publish; final edits were reviewed against the refreshed HEAD.
+- Next.js feedback: retained the repeated build/port-permission panic as an anonymized candidate. Feedback-instructions command first failed for missing network, then succeeded with escalated network access; a review-form draft is prepared in the final reporting pass, never submitted automatically.
+- Evidence: native conversation contains original prompts, tool outputs and failures; complete private post-turn export pending. This summary does not replace the transcript. No shared transcript or redactions produced.

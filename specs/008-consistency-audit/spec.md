@@ -25,7 +25,7 @@ Recent application and tooling changes need a systematic review against the proj
 | R03 | Protect behavior, security, accessibility and exact contracts | AC03 |
 | R04 | Evidence-based findings and honest verification | AC04–AC05 |
 | R05 | Explicit security audit of API contracts and data exposure | AC06–AC08 |
-| R06 | Necessary refactors preserve compatibility and business behavior | AC09–AC10 |
+| R06 | Necessary refactors preserve compatibility and business behavior | AC09–AC11 |
 
 | Criterion | Given / when | Observable result |
 | --- | --- | --- |

@@ -416,53 +416,113 @@ describe("ShiftPatchApp", () => {
     expect(screen.queryByTestId("credential-upload-input")).not.toBeInTheDocument();
   });
 
-  it("shows the nurse credential form and keeps an expired upload from looking eligible", async () => {
-    installFetch((url, init) => {
-      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
-      if (url.endsWith("/api/credentials") && init?.method === "POST") {
-        return jsonResponse({
-          credential: {
-            expiresOn: "2020-01-01",
-            documentName: "license.pdf",
-            mimeType: "application/pdf",
-            sizeBytes: 5,
-            uploadedAt: "2026-10-15T12:00:00.000Z",
-          },
-          status: "expired",
-        });
+  it("keeps the newest admin dashboard and audit after overlapping refreshes", async () => {
+    let releaseDashboard!: (response: Response) => void;
+    let releaseAudit!: (response: Response) => void;
+    const slowDashboard = new Promise<Response>((resolve) => { releaseDashboard = resolve; });
+    const slowAudit = new Promise<Response>((resolve) => { releaseAudit = resolve; });
+    let dashboards = 0;
+    let audits = 0;
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-admin", user: admin });
+      if (url.endsWith("/api/admin/dashboard")) {
+        dashboards += 1;
+        if (dashboards === 2) return slowDashboard;
+        return jsonResponse({ shifts: [], metrics: { open: 0, filled: 0 } });
       }
-      if (url.endsWith("/api/credentials")) {
-        return jsonResponse({
-          credential: {
-            expiresOn: "2027-01-01",
-            documentName: null,
-            mimeType: null,
-            sizeBytes: null,
-            uploadedAt: null,
-          },
-          status: "valid",
-        });
-      }
-      return jsonResponse({ shifts: trialShifts });
+      audits += 1;
+      if (audits === 2) return slowAudit;
+      return jsonResponse({ events: [] });
     });
     render(<ShiftPatchApp />);
-    await signIn("maria.lopez@example.com");
-    expect(await screen.findByRole("heading", { name: "Maria Lopez" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
-    expect(await screen.findByTestId("credential-upload-input")).toBeInTheDocument();
-    expect(screen.getByTestId("credential-expiry-date-input")).toBeInTheDocument();
-    expect(await screen.findByText("Eligible through 2027-01-01. No document has been uploaded.")).toBeInTheDocument();
-    expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Active");
-
-    const file = new File(["%PDF-"], "license.pdf", { type: "application/pdf" });
-    fireEvent.change(screen.getByTestId("credential-upload-input"), { target: { files: [file] } });
-    fireEvent.change(screen.getByTestId("credential-expiry-date-input"), { target: { value: "2020-01-01" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
-    expect(await screen.findByText("Credential saved. It is expired and cannot be used to claim a shift.")).toBeInTheDocument();
-    expect(screen.getByText("Expired on 2020-01-01. This credential cannot be used to claim a shift.")).toBeInTheDocument();
-    expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Expired");
-    const post = calls("/api/credentials").find((init) => init?.method === "POST");
-    expect(post?.body).toBeInstanceOf(FormData);
-    expect(post?.headers && "Content-Type" in (post.headers as object)).toBe(false);
+    await signIn("alex.kim@example.com");
+    expect(await screen.findByText("No shifts to show.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(calls("/api/admin/dashboard")).toHaveLength(3));
+    fireEvent.click(screen.getByRole("tab", { name: "Audit" }));
+    expect(await screen.findByText("No audit events yet.")).toBeInTheDocument();
+    await act(async () => {
+      releaseDashboard(jsonResponse({ shifts: trialShifts, metrics: { open: 2, filled: 1 } }));
+      releaseAudit(jsonResponse({ events: [{
+        id: "00000000-0000-4000-8000-000000000001",
+        actorId: "agency-a",
+        shiftId: "shift-1",
+        action: "create",
+        occurredAt: "2026-10-15T12:00:00.000Z",
+        reason: null,
+        previousNurseId: null,
+      }] }));
+    });
+    expect(screen.getByText("No audit events yet.")).toBeInTheDocument();
+    expect(screen.queryByTestId("audit-log-table")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Operations" }));
+    expect(screen.getByText("No shifts to show.")).toBeInTheDocument();
+    expect(screen.getByTestId("operations-metric-all")).toHaveTextContent("All0");
   });
+
+  it.each(["before save", "late success", "late unauthorized"])(
+    "keeps an expired upload authoritative when the initial credential read is %s",
+    async (readTiming) => {
+      let releaseRead!: (response: Response) => void;
+      const slowRead = new Promise<Response>((resolve) => { releaseRead = resolve; });
+      const previousView = {
+        credential: {
+          expiresOn: "2027-01-01",
+          documentName: null,
+          mimeType: null,
+          sizeBytes: null,
+          uploadedAt: null,
+        },
+        status: "valid",
+      };
+      installFetch((url, init) => {
+        if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+        if (url.endsWith("/api/credentials") && init?.method === "POST") {
+          return jsonResponse({
+            credential: {
+              expiresOn: "2020-01-01",
+              documentName: "license.pdf",
+              mimeType: "application/pdf",
+              sizeBytes: 5,
+              uploadedAt: "2026-10-15T12:00:00.000Z",
+            },
+            status: "expired",
+          });
+        }
+        if (url.endsWith("/api/credentials")) {
+          return readTiming === "before save" ? jsonResponse(previousView) : slowRead;
+        }
+        return jsonResponse({ shifts: trialShifts });
+      });
+      render(<ShiftPatchApp />);
+      await signIn("maria.lopez@example.com");
+      expect(await screen.findByRole("heading", { name: "Maria Lopez" })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
+      expect(await screen.findByTestId("credential-upload-input")).toBeInTheDocument();
+      expect(screen.getByTestId("credential-expiry-date-input")).toBeInTheDocument();
+      if (readTiming === "before save") {
+        expect(await screen.findByText("Eligible through 2027-01-01. No document has been uploaded.")).toBeInTheDocument();
+        expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Active");
+      }
+
+      const file = new File(["%PDF-"], "license.pdf", { type: "application/pdf" });
+      fireEvent.change(screen.getByTestId("credential-upload-input"), { target: { files: [file] } });
+      fireEvent.change(screen.getByTestId("credential-expiry-date-input"), { target: { value: "2020-01-01" } });
+      fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
+      expect(await screen.findByText("Credential saved. It is expired and cannot be used to claim a shift.")).toBeInTheDocument();
+      if (readTiming !== "before save") {
+        await act(async () => {
+          releaseRead(readTiming === "late unauthorized"
+            ? jsonResponse({ error: "Unauthorized" }, 401)
+            : jsonResponse(previousView));
+        });
+      }
+      expect(screen.getByText("Expired on 2020-01-01. This credential cannot be used to claim a shift.")).toBeInTheDocument();
+      expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Expired");
+      const post = calls("/api/credentials").find((init) => init?.method === "POST");
+      expect(post?.body).toBeInstanceOf(FormData);
+      expect(post?.headers && "Content-Type" in (post.headers as object)).toBe(false);
+    },
+  );
 });
