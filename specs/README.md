@@ -39,5 +39,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [009-security-hardening/spec.md](009-security-hardening/spec.md): implemented local hardening/readability improvements, including bounded JSON and login-throttle responses; direct-provider enforcement and deployed security verification remain open.
 - [010-project-wide-review/spec.md](010-project-wide-review/spec.md): implemented whole-project static review and focused frontend/client corrections; audit-aware hosted test cleanup remains pending, alongside recorded verification gaps.
 - [011-role-component-split/spec.md](011-role-component-split/spec.md): local ShiftPatchApp split into role components and a pure SPA view selector; parent retains session/request coordination. Build and some native browser checks remain open.
+- [012-shift-action-confirmation/spec.md](012-shift-action-confirmation/spec.md): shared app-dialog confirmation before claiming, reopening or publishing a shift; cancellation sends no mutation. Verification in its tasks.
 
 Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.

@@ -55,6 +55,10 @@ function installDialogClose() {
 }
 
 describe("ShiftPatchApp", () => {
+  beforeEach(() => {
+    installDialogClose();
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
     HTMLDialogElement.prototype.close = originalDialogClose;
@@ -283,6 +287,11 @@ describe("ShiftPatchApp", () => {
     await signIn("maria.lopez@example.com");
     expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(3);
     fireEvent.click(card("shift-1").getByTestId("shift-claim-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(calls("/claim")).toHaveLength(0);
+    expect(card("shift-1").getByText("Open")).toBeInTheDocument();
+    fireEvent.click(card("shift-1").getByTestId("shift-claim-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm claim" }));
     expect(await screen.findByText("Shift claimed.")).toBeInTheDocument();
     expect(card("shift-1").getByText("Filled")).toBeInTheDocument();
     expect(card("shift-1").getByText("Assigned nurse nurse-1")).toBeInTheDocument();
@@ -302,6 +311,7 @@ describe("ShiftPatchApp", () => {
     await signIn("maria.lopez@example.com");
     expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(3);
     fireEvent.click(card("shift-1").getByTestId("shift-claim-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm claim" }));
     expect(await screen.findByText("Credential expired, cannot claim shift")).toBeInTheDocument();
     expect(card("shift-1").getByText("Open")).toBeInTheDocument();
 
@@ -315,6 +325,7 @@ describe("ShiftPatchApp", () => {
       }));
     });
     fireEvent.click(card("shift-1").getByTestId("shift-claim-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm claim" }));
     expect(await screen.findByText("Shift is not available")).toBeInTheDocument();
     expect(card("shift-1").getByText("Assigned nurse nurse-9")).toBeInTheDocument();
   });
@@ -334,6 +345,7 @@ describe("ShiftPatchApp", () => {
     expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(3);
     const button = card("shift-1").getByTestId("shift-claim-button");
     fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm claim" }));
     fireEvent.click(button);
     await waitFor(() => expect(calls("/claim")).toHaveLength(1));
     expect(button).toBeDisabled();
@@ -348,6 +360,7 @@ describe("ShiftPatchApp", () => {
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await waitFor(() => expect(card("shift-3").getByText("Open")).toBeInTheDocument());
     fireEvent.click(card("shift-3").getByTestId("shift-claim-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm claim" }));
     expect(await screen.findByText(/The outcome is uncertain/)).toBeInTheDocument();
     expect(card("shift-3").getByText("Open")).toBeInTheDocument();
     expect(screen.queryByText("Shift claimed.")).not.toBeInTheDocument();
@@ -401,6 +414,12 @@ describe("ShiftPatchApp", () => {
     fireEvent.change(screen.getByLabelText("Start"), { target: { value: "19:00" } });
     fireEvent.change(screen.getByLabelText("End"), { target: { value: "07:00" } });
     fireEvent.click(screen.getByTestId("agency-post-shift-submit-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(calls("/api/shifts").filter((init) => init?.method === "POST")).toHaveLength(0);
+    expect(screen.getByRole("dialog", { name: "Post shift" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Date")).toHaveValue("2026-10-20");
+    fireEvent.click(screen.getByTestId("agency-post-shift-submit-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm publication" }));
     expect(await screen.findByText("Shift published.")).toBeInTheDocument();
     expect(card("shift-new").getByText("Open")).toBeInTheDocument();
     expect(card("shift-new").queryByText(/Assigned nurse/)).not.toBeInTheDocument();
@@ -422,6 +441,11 @@ describe("ShiftPatchApp", () => {
     await signIn("admin@sunrisehealth.example");
     expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(2);
     fireEvent.click(card("shift-2").getByTestId("shift-cancel-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(calls("/cancel")).toHaveLength(0);
+    expect(card("shift-2").getByText("Filled")).toBeInTheDocument();
+    fireEvent.click(card("shift-2").getByTestId("shift-cancel-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm reopening" }));
     await waitFor(() => expect(card("shift-2").getByText("Open")).toBeInTheDocument());
     expect(screen.getByText("Shift reopened.")).toBeInTheDocument();
     expect(JSON.parse(String(calls("/cancel")[0]?.body))).toEqual({ reason: "advance" });
@@ -442,6 +466,7 @@ describe("ShiftPatchApp", () => {
     await waitFor(() => expect(card("shift-2").getByText("Filled")).toBeInTheDocument());
     fireEvent.change(card("shift-2").getByLabelText("Reason"), { target: { value: "no-show" } });
     fireEvent.click(card("shift-2").getByTestId("shift-cancel-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm reopening" }));
     await waitFor(() => expect(card("shift-2").getByText("Open")).toBeInTheDocument());
     expect(screen.getByText("Shift reopened.")).toBeInTheDocument();
   });
@@ -633,6 +658,7 @@ describe("ShiftPatchApp", () => {
     fireEvent.change(screen.getByLabelText("Start"), { target: { value: "19:00" } });
     fireEvent.change(screen.getByLabelText("End"), { target: { value: "07:00" } });
     fireEvent.click(screen.getByTestId("agency-post-shift-submit-button"));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm publication" }));
     expect(await screen.findByText("Invalid shift")).toBeInTheDocument();
     expect(screen.getByRole("dialog", { name: "Post shift" })).toBeInTheDocument();
     expect(screen.getByLabelText("Role")).toHaveValue("LPN");

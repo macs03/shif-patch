@@ -380,6 +380,10 @@ dialog.modal::backdrop {
   background: color-mix(in oklch, var(--color-ink) 45%, transparent);
 }
 
+.confirmation-dialog-content {
+  margin-bottom: var(--space-xl);
+}
+
 .modal-bar {
   display: flex;
   align-items: center;

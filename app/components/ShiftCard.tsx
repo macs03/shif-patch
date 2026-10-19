@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import type { CancellationReason, Shift } from "@/lib/domain/types";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 export function ShiftCard({
   shift,
@@ -20,8 +21,12 @@ export function ShiftCard({
   onCancel: (shiftId: string, reason: CancellationReason) => void;
 }) {
   const [reason, setReason] = useState<CancellationReason>("advance");
+  const [confirmation, setConfirmation] = useState<{ action: "claim" } | { action: "reopen"; reason: CancellationReason } | null>(null);
   const overnight = shift.endTime < shift.startTime;
   const busy = pending || locked;
+  const canConfirm = !busy && (confirmation?.action === "claim"
+    ? mode === "nurse" && shift.status === "open"
+    : mode === "agency" && shift.status === "filled");
 
   return (
     <li data-testid="shift-list-item" data-shift-id={shift.id} className="card">
@@ -44,7 +49,9 @@ export function ShiftCard({
           data-testid="shift-claim-button"
           className="btn btn-primary"
           disabled={busy}
-          onClick={() => onClaim(shift.id)}
+          onClick={() => {
+            if (!busy) setConfirmation({ action: "claim" });
+          }}
         >
           {pending ? "Claiming" : "Claim shift"}
         </button>
@@ -54,7 +61,7 @@ export function ShiftCard({
           className="cancel-form"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!busy) onCancel(shift.id, reason);
+            if (!busy) setConfirmation({ action: "reopen", reason });
           }}
         >
           <label>
@@ -72,6 +79,26 @@ export function ShiftCard({
             {pending ? "Reopening" : "Reopen shift"}
           </button>
         </form>
+      ) : null}
+      {confirmation ? (
+        <ConfirmationDialog
+          title={confirmation.action === "claim" ? "Claim this shift?" : "Reopen this shift?"}
+          confirmLabel={confirmation.action === "claim" ? "Confirm claim" : "Confirm reopening"}
+          disabled={!canConfirm}
+          onClose={() => setConfirmation(null)}
+          onConfirm={() => {
+            if (!canConfirm) return;
+            setConfirmation(null);
+            if (confirmation.action === "claim") onClaim(shift.id);
+            else onCancel(shift.id, confirmation.reason);
+          }}
+        >
+          <p>{shift.agencyName} — {shift.role}</p>
+          <p>{shift.date}, {shift.startTime}–{shift.endTime}{overnight ? " (overnight)" : ""}</p>
+          {confirmation.action === "reopen" ? (
+            <p>Reason: {confirmation.reason}. This removes the current assignment and makes the shift available again.</p>
+          ) : <p>Are you sure you want to claim this shift?</p>}
+        </ConfirmationDialog>
       ) : null}
     </li>
   );
