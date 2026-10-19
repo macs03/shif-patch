@@ -48,7 +48,9 @@ function installDialogClose() {
   if (typeof HTMLDialogElement.prototype.close === "function") return;
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
     this.removeAttribute("open");
-    this.dispatchEvent(new Event("close"));
+    queueMicrotask(() => {
+      this.dispatchEvent(new Event("close"));
+    });
   };
 }
 
@@ -701,5 +703,24 @@ describe("ShiftPatchApp", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByTestId("agency-post-shift-button")).toBeInTheDocument();
+  });
+
+  it("keeps the selected nurse panel across a rerender and mounts only that role", async () => {
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
+      return jsonResponse({ shifts: trialShifts });
+    });
+    const view = render(<ShiftPatchApp />);
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findByRole("heading", { name: "Marketplace" })).toBeInTheDocument();
+    expect(screen.queryByTestId("agency-post-shift-button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Operations" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
+    expect(await screen.findByTestId("credential-expiry-date-input")).toBeInTheDocument();
+    view.rerender(<ShiftPatchApp />);
+    expect(screen.getByRole("tab", { name: "Credential" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByTestId("credential-expiry-date-input")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Marketplace" })).not.toBeInTheDocument();
   });
 });

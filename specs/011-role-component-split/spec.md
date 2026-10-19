@@ -1,12 +1,12 @@
 # Role Component Split — Specification
 
-Feature ID: 011-role-component-split · Date: 2026-10-19 · Status: Planned; runtime implementation pending
+Feature ID: 011-role-component-split · Date: 2026-10-19 · Status: Implemented locally; build and some native browser checks remain open
 
 Source: user requests a readability refactor of app/components/ShiftPatchApp.tsx, keeping it as the parent and separating role/mode implementations into files. Follow-up: a function in a separate file must select and return the appropriate SPA view, avoiding role-selection conditionals in the parent's JSX. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Preserve contracts and audit corrections from features 001–010.
 
 ## Problem and expected outcome
 
-ShiftPatchApp currently contains 664 lines: session/request orchestration, signed-out form markup, nurse/agency views, shared shift-board rendering and publishing-dialog lifecycle. AdminDashboard is already separate. Give each role a clear component entry and keep shared session/mutation safeguards in one owner. This is an explicitly requested maintenance improvement, not a demonstrated vulnerability or performance defect. This turn delivers planning only.
+ShiftPatchApp currently contains 664 lines: session/request orchestration, signed-out form markup, nurse/agency views, shared shift-board rendering and publishing-dialog lifecycle. AdminDashboard is already separate. Give each role a clear component entry and keep shared session/mutation safeguards in one owner. This is an explicitly requested maintenance improvement, not a demonstrated vulnerability or performance defect.
 
 ## Scope
 
@@ -40,7 +40,7 @@ Preserve routes, requests/responses/errors, permissions, fixture values, local t
 
 app/page.tsx keeps the named ShiftPatchApp export. Browser work remains in the existing client module graph; server/database modules stay outside it. API clients remain in lib/client/api.ts. Views receive only required data/callbacks, with existing public domain shapes. No new token props, markup, logs or storage.
 
-Keep login fields, nursePanel and creating controlled by the parent to preserve resetSession behavior. Reuse AdminDashboard directly. Extract presentation/dialog first; moving async coordination would need a separately justified scope. No unresolved product question blocks this plan. Current request authorizes planning; runtime tasks remain pending.
+Keep login fields, nursePanel and creating controlled by the parent to preserve resetSession behavior. Reuse AdminDashboard directly. Extract presentation/dialog first; moving async coordination would need a separately justified scope. No unresolved product question blocks this plan. Runtime implementation is recorded in tasks.md; build and unexecuted native checks stay open.
 
 ## Delivery condition
 
@@ -52,3 +52,4 @@ Planning: reviewed spec/plan/tasks, criterion mapping and feature index. Runtime
 | --- | --- | --- |
 | 2026-10-19 | Initial parent/role component refactor plan | User request |
 | 2026-10-19 | Separate pure SPA view selector, including signed-out rendering | User requested router-like selection without parent JSX role branches |
+| 2026-10-19 | Local implementation of the split and renderAppView | User requested implementation |

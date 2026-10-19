@@ -19,7 +19,7 @@ export function PostShiftDialog({
   onSubmit: (value: CreateShiftRequest) => void;
 }) {
   const postDialog = useRef<HTMLDialogElement>(null);
-  const ignoreDialogClose = useRef(false);
+  const suppressClose = useRef(0);
 
   useEffect(() => {
     const dialog = postDialog.current;
@@ -32,10 +32,10 @@ export function PostShiftDialog({
       }
     }
     return () => {
-      ignoreDialogClose.current = true;
-      if (dialog.open && typeof dialog.close === "function") dialog.close();
-      else dialog.removeAttribute("open");
-      ignoreDialogClose.current = false;
+      if (dialog.open && typeof dialog.close === "function") {
+        suppressClose.current += 1;
+        dialog.close();
+      } else dialog.removeAttribute("open");
     };
   }, []);
 
@@ -51,7 +51,11 @@ export function PostShiftDialog({
         if (!inside) event.currentTarget.close();
       }}
       onClose={() => {
-        if (!ignoreDialogClose.current) onClose();
+        if (suppressClose.current > 0) {
+          suppressClose.current -= 1;
+          return;
+        }
+        onClose();
       }}
     >
       <div className="modal-bar">

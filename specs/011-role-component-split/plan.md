@@ -1,6 +1,6 @@
 # Role Component Split — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Planned; runtime implementation pending
+Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Implemented locally; verification limits in tasks.md
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Baseline HEAD `1294363`; parent has 664 lines. Preserve existing uncommitted audit-status documents in 008–010 and specs/README.md.
 

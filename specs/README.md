@@ -38,6 +38,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [008-consistency-audit/spec.md](008-consistency-audit/spec.md): implemented local audit and stale-response corrections; hosted RLS and some browser checks remain unverified.
 - [009-security-hardening/spec.md](009-security-hardening/spec.md): implemented local hardening/readability improvements, including bounded JSON and login-throttle responses; direct-provider enforcement and deployed security verification remain open.
 - [010-project-wide-review/spec.md](010-project-wide-review/spec.md): implemented whole-project static review and focused frontend/client corrections; audit-aware hosted test cleanup remains pending, alongside recorded verification gaps.
-- [011-role-component-split/spec.md](011-role-component-split/spec.md): planned ShiftPatchApp split into role components with a separate pure SPA view selector, shared board and publishing dialog; parent retains session/request coordination. Implementation/verification tracked in its tasks.
+- [011-role-component-split/spec.md](011-role-component-split/spec.md): local ShiftPatchApp split into role components and a pure SPA view selector; parent retains session/request coordination. Build and some native browser checks remain open.
 
 Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.
