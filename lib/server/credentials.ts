@@ -43,19 +43,40 @@ async function boundedBody(request: Request): Promise<Uint8Array> {
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
+  let failure: HttpError | null = null;
   try {
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (!value) continue;
-      total += value.byteLength;
-      if (total > MAX_CREDENTIAL_BODY_BYTES) throw new HttpError(413, "File too large");
-      chunks.push(value);
+      let step: ReadableStreamReadResult<Uint8Array>;
+      try {
+        step = await reader.read();
+      } catch {
+        failure = new HttpError(400, "Invalid request");
+        break;
+      }
+      if (step.done) break;
+      if (!step.value) continue;
+      total += step.value.byteLength;
+      if (total > MAX_CREDENTIAL_BODY_BYTES) {
+        failure = new HttpError(413, "File too large");
+        break;
+      }
+      chunks.push(step.value);
     }
-  } catch (error) {
-    if (error instanceof HttpError) throw error;
-    throw new HttpError(400, "Invalid request");
+  } finally {
+    if (failure) {
+      try {
+        await reader.cancel();
+      } catch (cleanupError) {
+        void cleanupError;
+      }
+    }
+    try {
+      reader.releaseLock();
+    } catch (cleanupError) {
+      void cleanupError;
+    }
   }
+  if (failure) throw failure;
   const body = new Uint8Array(total);
   let offset = 0;
   for (const chunk of chunks) {
@@ -147,6 +168,10 @@ export async function readCredential(caller: Caller): Promise<CredentialResponse
   return present(rows[0] ?? null);
 }
 
+function noteCleanup(reason: "superseded_delete_failed" | "orphan_delete_failed" | "cleanup_deferred"): void {
+  console.warn(JSON.stringify({ event: "credential_cleanup", reason }));
+}
+
 async function removeObject(token: string, path: string): Promise<boolean> {
   try {
     const result = await client(token).storage.from("credentials").remove([path]);
@@ -200,7 +225,8 @@ export async function saveCredential(caller: Caller, request: Request): Promise<
     const row = rows[0];
     if (!row || row.object_path !== objectPath) throw new HttpError(500, "Internal server error");
     if (row.previous_object_path && row.previous_object_path !== objectPath) {
-      await removeObject(caller.token, row.previous_object_path);
+      const removed = await removeObject(caller.token, row.previous_object_path);
+      if (!removed) noteCleanup("superseded_delete_failed");
     }
     return present(row);
   } catch (error) {
@@ -213,7 +239,8 @@ export async function saveCredential(caller: Caller, request: Request): Promise<
       readable = false;
     }
     if (active?.object_path === objectPath) return present(active);
-    if (readable) await removeObject(caller.token, objectPath);
+    if (!readable) noteCleanup("cleanup_deferred");
+    else if (!(await removeObject(caller.token, objectPath))) noteCleanup("orphan_delete_failed");
     if (error instanceof HttpError) throw error;
     throw new HttpError(500, "Internal server error");
   }

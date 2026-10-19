@@ -7,6 +7,7 @@ import {
   deriveCredentialStatus,
   formatScheduledDuration,
   inspectDocument,
+  MAX_CREDENTIAL_BODY_BYTES,
   scheduledMinutes,
 } from "@/lib/domain/credentials";
 
@@ -269,5 +270,168 @@ describe("credential and admin routes", () => {
     profile = nurse;
     const denied = await getAudit(request("/api/admin/audit"));
     expect(denied.status).toBe(403);
+  });
+
+  it("keeps an empty audit array and rejects a non-array envelope", async () => {
+    profile = admin;
+    mockRpc.mockResolvedValueOnce({ data: [], error: null });
+    const empty = await getAudit(request("/api/admin/audit"));
+    expect(empty.status).toBe(200);
+    expect(await bodyOf(empty)).toEqual({ events: [] });
+
+    for (const data of [null, { events: [] }, "events"]) {
+      mockRpc.mockResolvedValueOnce({ data, error: null });
+      const malformed = await getAudit(request("/api/admin/audit"));
+      expect(malformed.status).toBe(500);
+      expect(await bodyOf(malformed)).toEqual({ error: "Internal server error" });
+    }
+  });
+
+  it("cancels an oversized upload and keeps that error when reader cleanup fails", async () => {
+    let cancelled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(MAX_CREDENTIAL_BODY_BYTES + 1));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const upload = new Request("https://shiftpatch.test/api/credentials", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "multipart/form-data; boundary=x",
+      },
+      body: stream,
+      duplex: "half",
+    } as RequestInit);
+    const oversize = await postCredential(upload);
+    expect(oversize.status).toBe(413);
+    expect(cancelled).toBe(true);
+    expect(await bodyOf(oversize)).toEqual({ error: "File too large" });
+    expect(upload.body?.locked).toBe(false);
+    expect(mockUpload).not.toHaveBeenCalled();
+
+    const original = ReadableStream.prototype.getReader;
+    const getReader = jest.spyOn(ReadableStream.prototype, "getReader").mockImplementation(function mockReader(this: ReadableStream<Uint8Array>) {
+      const reader = original.call(this);
+      reader.cancel = () => Promise.reject(new Error("cancel failed"));
+      reader.releaseLock = () => {
+        throw new Error("release failed");
+      };
+      return reader;
+    });
+    const noisy = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(MAX_CREDENTIAL_BODY_BYTES + 1));
+      },
+    });
+    const failing = new Request("https://shiftpatch.test/api/credentials", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "multipart/form-data; boundary=x",
+      },
+      body: noisy,
+      duplex: "half",
+    } as RequestInit);
+    try {
+      const stillTooBig = await postCredential(failing);
+      expect(stillTooBig.status).toBe(413);
+      expect(await bodyOf(stillTooBig)).toEqual({ error: "File too large" });
+    } finally {
+      getReader.mockRestore();
+    }
+
+    const broken = new ReadableStream<Uint8Array>({
+      pull() {
+        throw new Error("read failed");
+      },
+    });
+    const unreadable = new Request("https://shiftpatch.test/api/credentials", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer token",
+        "content-type": "multipart/form-data; boundary=x",
+      },
+      body: broken,
+      duplex: "half",
+    } as RequestInit);
+    const readFailed = await postCredential(unreadable);
+    expect(readFailed.status).toBe(400);
+    expect(await bodyOf(readFailed)).toEqual({ error: "Invalid request" });
+    expect(unreadable.body?.locked).toBe(false);
+  });
+
+  it("records cleanup failure without changing the credential response or logging the object", async () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const good = new FormData();
+    good.set("document", new File([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])], "license.pdf", { type: "application/pdf" }));
+    good.set("expiresOn", "2027-02-02");
+    const previous = "11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222";
+    mockRpc.mockImplementation((fn: string, args?: { p_object_path?: string }) => {
+      if (fn !== "finalize_credential") return Promise.resolve({ data: null, error: { message: "unexpected" } });
+      return Promise.resolve({
+        data: [{
+          expires_on: "2027-02-02",
+          document_name: "license.pdf",
+          mime_type: "application/pdf",
+          size_bytes: 5,
+          uploaded_at: "2026-10-15T12:00:00.000Z",
+          object_path: args?.p_object_path,
+          previous_object_path: previous,
+        }],
+        error: null,
+      });
+    });
+    mockRemove.mockResolvedValue({ error: { message: previous } });
+    const saved = await postCredential(request("/api/credentials", { method: "POST", body: good }));
+    expect(saved.status).toBe(200);
+    expect(warn).toHaveBeenCalledWith(JSON.stringify({
+      event: "credential_cleanup",
+      reason: "superseded_delete_failed",
+    }));
+    expect(JSON.stringify(warn.mock.calls)).not.toContain(previous);
+
+    warn.mockClear();
+    mockRpc.mockReset();
+    mockRpc
+      .mockResolvedValueOnce({ data: null, error: { message: "shiftpatch_invalid", code: "P0001" } })
+      .mockRejectedValueOnce(new Error("unread"));
+    const failed = await postCredential(request("/api/credentials", { method: "POST", body: good }));
+    expect(failed.status).toBe(400);
+    expect(mockRemove).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(JSON.stringify({
+      event: "credential_cleanup",
+      reason: "cleanup_deferred",
+    }));
+
+    warn.mockClear();
+    mockRemove.mockClear();
+    mockRpc.mockReset();
+    mockRpc
+      .mockResolvedValueOnce({ data: null, error: { message: "shiftpatch_invalid", code: "P0001" } })
+      .mockResolvedValueOnce({
+        data: [{
+          expires_on: "2027-01-01",
+          document_name: "kept.pdf",
+          mime_type: "application/pdf",
+          size_bytes: 5,
+          uploaded_at: "2026-10-15T12:00:00.000Z",
+          object_path: previous,
+        }],
+        error: null,
+      });
+    mockRemove.mockResolvedValue({ error: { message: "remove failed" } });
+    const orphan = await postCredential(request("/api/credentials", { method: "POST", body: good }));
+    expect(orphan.status).toBe(400);
+    expect(mockRemove).toHaveBeenCalledTimes(1);
+    expect(mockRemove.mock.calls[0]?.[0]).not.toEqual([previous]);
+    expect(warn).toHaveBeenCalledWith(JSON.stringify({
+      event: "credential_cleanup",
+      reason: "orphan_delete_failed",
+    }));
+    warn.mockRestore();
   });
 });

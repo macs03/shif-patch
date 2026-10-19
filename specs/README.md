@@ -36,5 +36,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [006-credentials-admin/spec.md](006-credentials-admin/spec.md): private credential upload, admin shift overview, audit log and scheduled-hours preview. Implemented and manually verified, with the limits recorded in its tasks.
 - [007-ci-e2e/spec.md](007-ci-e2e/spec.md): GitHub Actions quality workflow without a backend. Local Node 24 checks passed; a GitHub run is still unobserved. Real-backend verification and Vercel are out of scope.
 - [008-consistency-audit/spec.md](008-consistency-audit/spec.md): consistency, security, UI and verification audit. One compatible refresh-race fix is applied; hosted RLS and some viewport checks remain unverified.
+- [009-security-hardening/spec.md](009-security-hardening/spec.md): upload-reader, audit-envelope and cleanup-signal corrections, plus two small form/state simplifications. JSON limits, Auth 429 and direct Storage enforcement remain undecided.
 
 Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.

@@ -21,19 +21,22 @@ export function CreateShiftForm({
   const [value, setValue] = useState(empty);
   const [errors, setErrors] = useState<Errors>({});
 
-  function validate(next: typeof value): Errors {
-    const found: Errors = {};
-    if (next.role !== "RN" && next.role !== "LPN") found.role = "Choose RN or LPN.";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(next.date)) found.date = "Enter a real date as YYYY-MM-DD.";
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(next.startTime)) found.startTime = "Enter a start time as HH:mm.";
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(next.endTime)) found.endTime = "Enter an end time as HH:mm.";
-    if (!found.startTime && !found.endTime && next.startTime === next.endTime) {
-      found.endTime = "Start and end must differ. An earlier end time is an overnight shift.";
+  function validate(next: typeof value): { errors: Errors; parsed: CreateShiftRequest | null } {
+    const errors: Errors = {};
+    if (next.role !== "RN" && next.role !== "LPN") errors.role = "Choose RN or LPN.";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(next.date)) errors.date = "Enter a real date as YYYY-MM-DD.";
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(next.startTime)) errors.startTime = "Enter a start time as HH:mm.";
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(next.endTime)) errors.endTime = "Enter an end time as HH:mm.";
+    if (!errors.startTime && !errors.endTime && next.startTime === next.endTime) {
+      errors.endTime = "Start and end must differ. An earlier end time is an overnight shift.";
     }
-    if (Object.keys(found).length === 0 && !createShiftRequestSchema.safeParse(next).success) {
-      found.date = "Enter a real date as YYYY-MM-DD.";
+    if (Object.keys(errors).length > 0) return { errors, parsed: null };
+    const parsed = createShiftRequestSchema.safeParse(next);
+    if (!parsed.success) {
+      errors.date = "Enter a real date as YYYY-MM-DD.";
+      return { errors, parsed: null };
     }
-    return found;
+    return { errors, parsed: parsed.data };
   }
 
   return (
@@ -43,9 +46,9 @@ export function CreateShiftForm({
         event.preventDefault();
         if (pending || locked) return;
         const found = validate(value);
-        setErrors(found);
-        if (Object.keys(found).length > 0) return;
-        onSubmit(value as CreateShiftRequest);
+        setErrors(found.errors);
+        if (!found.parsed) return;
+        onSubmit(found.parsed);
       }}
     >
       <div className="field">

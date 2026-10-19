@@ -32,7 +32,7 @@ type NursePanel = "marketplace" | "credential";
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
 type ListState = { status: "loading" | "ready" | "error"; shifts: Shift[]; loadError: string | null };
-type CredentialState = { status: "idle" | "loading" | "ready" | "error"; view: CredentialResponse | null; error: string | null };
+type CredentialState = { view: CredentialResponse | null; error: string | null };
 type AdminState = {
   status: "idle" | "loading" | "ready" | "error";
   shifts: Shift[];
@@ -43,7 +43,7 @@ type AdminState = {
   auditError: string | null;
 };
 
-const idleCredential: CredentialState = { status: "idle", view: null, error: null };
+const idleCredential: CredentialState = { view: null, error: null };
 const idleAdmin: AdminState = {
   status: "idle",
   shifts: [],
@@ -167,7 +167,7 @@ export function ShiftPatchApp() {
     try {
       const view = await readCredential(target.token, signal);
       if (epoch.current !== snap || credentialReads.current !== ticket) return;
-      setCredential({ status: "ready", view, error: null });
+      setCredential({ view, error: null });
     } catch (error) {
       if (isAbort(error) || epoch.current !== snap || credentialReads.current !== ticket) return;
       if (error instanceof ApiError && error.status === 401) {
@@ -177,8 +177,8 @@ export function ShiftPatchApp() {
       const message = error instanceof ApiError ? error.message : "Credential could not be loaded.";
       setCredential((prev) => (
         prev.view
-          ? { status: "ready", view: prev.view, error: message }
-          : { status: "error", view: null, error: message }
+          ? { view: prev.view, error: message }
+          : { view: null, error: message }
       ));
     }
   }, [expire]);
@@ -352,9 +352,7 @@ export function ShiftPatchApp() {
       setList(result.user.role === "admin"
         ? { status: "ready", shifts: [], loadError: null }
         : { status: "loading", shifts: [], loadError: null });
-      setCredential(result.user.role === "nurse"
-        ? { status: "loading", view: null, error: null }
-        : idleCredential);
+      setCredential(idleCredential);
       setAdmin(result.user.role === "admin"
         ? { ...idleAdmin, status: "loading", auditStatus: "loading" }
         : idleAdmin);
@@ -402,7 +400,7 @@ export function ShiftPatchApp() {
       const view = await submitCredential(session.token, document, expiresOn, controller.signal);
       if (epoch.current !== snap) return;
       credentialReads.current += 1;
-      setCredential({ status: "ready", view, error: null });
+      setCredential({ view, error: null });
       setNotice({
         tone: view.status === "expired" ? "error" : "success",
         message: view.status === "expired"

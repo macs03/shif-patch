@@ -235,7 +235,8 @@ export async function readAuditEvents(token: string): Promise<AuditEvent[]> {
     throw new HttpError(503, "Service unavailable");
   }
   if (error) throwDataError(error);
-  const rows = Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) throw new HttpError(500, "Internal server error");
+  const rows = data;
   return auditResponseSchema.parse({
     events: rows.map((row) => {
       const event = row as {
