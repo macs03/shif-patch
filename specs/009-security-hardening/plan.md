@@ -1,6 +1,6 @@
 # Security and Code Quality Improvements — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Local hardening and readability changes implemented; deployed controls unverified
+Specification: [spec.md](spec.md) · Date: 2026-10-19 · Status: Implemented within authorized local scope; Q03–Q04 and deployed verification open
 
 Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Baseline: clean working tree at HEAD `36c62a2` before this planning session.
 

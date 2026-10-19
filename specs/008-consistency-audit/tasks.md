@@ -2,6 +2,8 @@
 
 Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-19
 
+Status: Implemented within authorized local scope. T00–T08 are complete. Hosted RLS, native Escape and 320/414/768 viewport checks remain unverified; the later build environment failure remains recorded. This closes local audit/correction delivery, not deployed or browser verification.
+
 ## Tasks
 
 | ID | Requirements / criteria | Work | Dependencies | Status | Completion checks |
@@ -94,6 +96,11 @@ Disposition: necessary compatible correction, applied in T08. Deployment/securit
 - Q02. Synthetic Escape did not dismiss the open modal. The element was a true modal dialog (`:modal`), and the Close button returned focus to Post shift. A hardware Escape press was not observed.
 
 ## Execution log
+
+### 2026-10-19 — Implementation status reconciliation
+
+- User requested implementation closure across audits 008–010. Primary Codex agent only; no delegation. Initial tree clean at `1294363`. Reviewed current specifications, plans, task states and recorded checks; aligned current status summaries without rewriting historical results or closing unexecuted checks.
+- Documentation-only change: no new runtime checks, hosted requests, database writes, commit or publication. Prior test/build results remain historical. Private complete native transcript export remains pending. No new Next.js feedback candidate.
 
 ### 2026-10-19 — T00 planning
 

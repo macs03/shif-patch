@@ -1,6 +1,6 @@
 # Security and Code Quality Improvements — Specification
 
-Feature ID: 009-security-hardening · Date: 2026-10-19 · Status: Local hardening implemented; Q03–Q04 and deployed verification remain open
+Feature ID: 009-security-hardening · Date: 2026-10-19 · Status: Implemented within authorized local scope; Q03–Q04 and deployed verification open
 
 Source: user request to identify code vulnerabilities and gaps in good practices, prepare a plan and create improvement tasks. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Follows [008](../008-consistency-audit/tasks.md); preserves features 004–006 contracts and 007 verification exclusions.
 

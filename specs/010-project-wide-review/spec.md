@@ -1,6 +1,6 @@
 # Project-wide Code Review — Specification
 
-Feature ID: 010-project-wide-review · Date: 2026-10-19 · Status: Static review and focused corrections complete; hosted follow-ups pending
+Feature ID: 010-project-wide-review · Date: 2026-10-19 · Status: Implemented within authorized local scope; hosted follow-ups pending
 
 Source: user requested frontend/component/state/utility review, then explicitly expanded it to the entire current project rather than recent changes. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Preserve features 001–009 contracts and recorded evidence.
 

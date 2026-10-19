@@ -1,6 +1,6 @@
 # Code Consistency Audit — Specification
 
-Feature ID: 008-consistency-audit · Date: 2026-10-19 · Status: Audit executed; one compatible refactor applied
+Feature ID: 008-consistency-audit · Date: 2026-10-19 · Status: Implemented within authorized local scope; verification follow-ups open
 
 Source: user request for an audit plan using available skills and Ponytail, prioritizing consistency, concise code and project guidelines. Constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
 
@@ -12,7 +12,7 @@ Recent application and tooling changes need a systematic review against the proj
 
 - Included: the current first-party application, server/client/domain boundaries, SQL migrations, tests, CI configuration, design system, specifications and skill provenance. Prioritize recent login, header, admin tabs/metrics and create-shift modal changes, then follow their callers and shared dependencies.
 - Review installed skill files as guidance and provenance, not as product code to rewrite.
-- This request delivers the audit plan. Audit execution and corrective implementation remain separate tasks.
+- The initial request delivered the audit plan. Audit execution and the authorized stale-response corrections are now implemented; actual outcomes and remaining verification limits are recorded in tasks.md.
 - Any later refactor within this audit's scope must be strictly necessary to address an evidenced finding and preserve existing business logic and externally observable behavior. Cosmetic cleanup alone does not justify changes. Breaking changes, business-rule changes and API contract changes are excluded.
 - Excluded: dependency installation, new tools/scripts, redesign, new features, database writes, hosted mutation tests, withdrawn browser E2E, external configuration, deployment, commits and publication.
 

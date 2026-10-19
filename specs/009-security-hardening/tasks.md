@@ -2,6 +2,8 @@
 
 Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-19
 
+Status: Implemented within authorized local scope. Local correction tasks are complete; T06 is statically assessed, with Q03–Q04 still open. Direct-provider content enforcement and deployed RLS/bucket/rate-limit verification are not certified. The current build remains unverified after the recorded environmental failure.
+
 ## Tasks
 
 | ID | Priority / findings | Requirements / criteria | Work and files | Dependencies | Status | Completion checks |
@@ -19,7 +21,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | T10 | P3 / C03 | R06–R07 / AC07–AC08, AC11 | Share duplicated session-reset operations with separate caller notices | User clarified readability scope | Completed | Same cleared fields, refs, invalidation and stable effect dependencies; session/401 regressions passed |
 | T11 | Regression coverage | R01,R03,R06 / AC01, AC03, AC07–AC08 | Verify reader release on valid upload and active-document preservation after a lost finalize response | T01, T03 | Completed | Saved public metadata returned with 200 and no deletion; valid-upload reader unlocked; 47 tests/typecheck/lint passed; final focused checks passed |
 
-Statuses are task delivery status, not vulnerability severity. T04–T06 do not change contracts, provision services or mutate the database.
+Statuses are task delivery status, not vulnerability severity. T04/T05 implement the authorized JSON-limit and login-throttle error contracts; T06 remains a static assessment. None provisions services or mutates the database.
 
 T08–T10 are optional code-quality assessments. Record a justified deferral/no-change decision when a refactor is not strictly necessary; do not mark a deferred implementation as completed. Their assessment can be complete while the proposed implementation remains explicitly deferred.
 
@@ -41,6 +43,11 @@ T08–T10 are optional code-quality assessments. Record a justified deferral/no-
 AC07–AC08 also govern any implementation arising from T08–T10; their presence does not waive compatibility or regression checks.
 
 ## Execution log
+
+### 2026-10-19 — Implementation status reconciliation
+
+- User requested implementation closure across audits 008–010. Primary Codex agent only; no delegation. Initial tree clean at `1294363`. Aligned local implementation summaries with actual task/evidence status. T06 remains assessed and Q03–Q04 remain open; no security or deployed-verification certification implied.
+- Documentation-only change: no new runtime checks, hosted requests, database writes, commit or publication. Historical verification and failures retained. Private complete native transcript export remains pending. No new Next.js feedback candidate.
 
 ### 2026-10-19 — T00 focused review and planning
 
