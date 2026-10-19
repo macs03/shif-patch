@@ -12,7 +12,7 @@ The original starting point contained API handlers and a starter home page. The 
 
 Included: login interface, role-specific nurse marketplace and agency dashboard, shift cards, create form, claim and agency cancellation actions, credential-error handling, success/error banners, accessible responsive interaction states and critical browser E2E tests.
 
-The signed-out login uses a centered card on a full-viewport canvas, Hallmark Cobalt tokens in `app/globals.css`, and a show/hide password control beside the Password label. Existing login test IDs, labels and API behavior are unchanged.
+The signed-out login uses a centered card on a full-viewport canvas, Hallmark Cobalt tokens in `app/globals.css`, and a show/hide password control beside the Password label. Signed-in views use a full-width header (SP monogram, name, role badge, icon sign-out) and nurse role tabs (Marketplace / Credential). The locked token map and chrome rules are summarized in [`design.md`](../../design.md) at the repo root. Existing login test IDs, labels and API behavior are unchanged.
 
 Excluded: recommendations, automatic matching, push/email notifications, advanced scheduling, registration, password recovery, token refresh, credential uploads, audit logs, timesheets, a new admin dashboard, nurse cancellation UI, new API endpoints and deployment. Existing API cancellation rights for a claiming nurse remain unchanged. The six additional parent test IDs for deferred modules remain parent obligations; this epic implements the nine listed below.
 

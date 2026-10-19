@@ -22,7 +22,10 @@ import { CreateShiftForm } from "./CreateShiftForm";
 import { CredentialForm } from "./CredentialForm";
 import { NotificationBanner } from "./NotificationBanner";
 import { ShiftCard } from "./ShiftCard";
-import { IconEye, IconEyeOff, IconRefresh, IconSignOut } from "./UiIcons";
+import { AppHeader } from "./AppHeader";
+import { IconEye, IconEyeOff, IconRefresh } from "./UiIcons";
+
+type NursePanel = "marketplace" | "credential";
 
 type Session = { token: string; user: SessionUser };
 type Notice = { tone: "success" | "error"; message: string } | null;
@@ -66,6 +69,7 @@ export function ShiftPatchApp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [nursePanel, setNursePanel] = useState<NursePanel>("marketplace");
   const [loginError, setLoginError] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -110,6 +114,7 @@ export function ShiftPatchApp() {
     setEmail("");
     setPassword("");
     setShowPassword(false);
+    setNursePanel("marketplace");
     setLoginError("");
     setList({ status: "ready", shifts: [], loadError: null });
     setCredential(idleCredential);
@@ -331,6 +336,7 @@ export function ShiftPatchApp() {
       if (epoch.current !== snap) return;
       setPassword("");
       setShowPassword(false);
+      setNursePanel("marketplace");
       setNotice(null);
       setList(result.user.role === "admin"
         ? { status: "ready", shifts: [], loadError: null }
@@ -364,6 +370,7 @@ export function ShiftPatchApp() {
     setEmail("");
     setPassword("");
     setShowPassword(false);
+    setNursePanel("marketplace");
     setLoginError("");
     setNotice(null);
     setList({ status: "ready", shifts: [], loadError: null });
@@ -473,25 +480,40 @@ export function ShiftPatchApp() {
     );
   }
 
+  const showShiftBoard =
+    mode === "agency" || (session.user.role === "nurse" && nursePanel === "marketplace");
+
   return (
-    <div className={session.user.role === "admin" ? "shell shell-wide" : "shell"}>
-      <header className="mast">
-        <p className="mark">ShiftPatch</p>
-        <div className="mast-row">
-          <h1>{session.user.name}</h1>
+    <div className="app-frame">
+      <AppHeader name={session.user.name} role={session.user.role} onSignOut={signOut} />
+      <div className={session.user.role === "admin" ? "shell shell-wide" : "shell"}>
+      <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
+      {session.user.role === "nurse" ? (
+        <div className="role-tabs" role="tablist" aria-label="Nurse">
           <button
             type="button"
-            className="btn btn-icon btn-icon-muted"
-            onClick={signOut}
-            aria-label="Sign out"
-            title="Sign out"
+            role="tab"
+            id="nurse-tab-marketplace"
+            className="role-tab"
+            aria-selected={nursePanel === "marketplace"}
+            aria-controls="nurse-panel-marketplace"
+            onClick={() => setNursePanel("marketplace")}
           >
-            <IconSignOut />
+            Marketplace
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="nurse-tab-credential"
+            className="role-tab"
+            aria-selected={nursePanel === "credential"}
+            aria-controls="nurse-panel-credential"
+            onClick={() => setNursePanel("credential")}
+          >
+            Credential
           </button>
         </div>
-        <p className="role-line">{session.user.role}</p>
-      </header>
-      <NotificationBanner tone={notice?.tone ?? "idle"} message={notice?.message ?? ""} />
+      ) : null}
       {session.user.role === "admin" ? (
         <AdminDashboard
           shifts={admin.shifts}
@@ -504,16 +526,28 @@ export function ShiftPatchApp() {
           onRefresh={() => void refresh(false)}
         />
       ) : null}
-      {session.user.role === "nurse" ? (
-        <CredentialForm
-          view={credential.view}
-          loadError={credential.error}
-          pending={credentialPending}
-          onSubmit={(document, expiresOn) => void onCredential(document, expiresOn)}
-        />
+      {session.user.role === "nurse" && nursePanel === "credential" ? (
+        <div
+          id="nurse-panel-credential"
+          role="tabpanel"
+          aria-labelledby="nurse-tab-credential"
+        >
+          <CredentialForm
+            view={credential.view}
+            loadError={credential.error}
+            pending={credentialPending}
+            onSubmit={(document, expiresOn) => void onCredential(document, expiresOn)}
+          />
+        </div>
       ) : null}
-      {mode ? (
-        <section className="board" aria-busy={list.status === "loading"}>
+      {showShiftBoard && mode ? (
+        <section
+          id={session.user.role === "nurse" ? "nurse-panel-marketplace" : undefined}
+          role={session.user.role === "nurse" ? "tabpanel" : undefined}
+          aria-labelledby={session.user.role === "nurse" ? "nurse-tab-marketplace" : undefined}
+          className="board"
+          aria-busy={list.status === "loading"}
+        >
           <div className="board-bar">
             <h2>{mode === "nurse" ? "Marketplace" : "Your shifts"}</h2>
             <button
@@ -586,6 +620,7 @@ export function ShiftPatchApp() {
           ) : null}
         </section>
       ) : null}
+      </div>
     </div>
   );
 }

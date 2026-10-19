@@ -16,6 +16,25 @@ function statusCopy(view: CredentialResponse | null): string {
   return `Eligible through ${expiresOn}. Current document: ${documentName}.`;
 }
 
+function statusTag(
+  view: CredentialResponse | null,
+  loadError: string | null,
+): { label: string; className: string } {
+  if (loadError) {
+    return { label: "Unavailable", className: "credential-status credential-status-muted" };
+  }
+  if (!view) {
+    return { label: "Checking", className: "credential-status credential-status-muted" };
+  }
+  if (view.status === "valid") {
+    return { label: "Active", className: "credential-status credential-status-active" };
+  }
+  if (view.status === "expired") {
+    return { label: "Expired", className: "credential-status credential-status-expired" };
+  }
+  return { label: "Not on file", className: "credential-status credential-status-muted" };
+}
+
 export function CredentialForm({
   view,
   loadError,
@@ -46,9 +65,21 @@ export function CredentialForm({
     onSubmit(file, date);
   }
 
+  const tag = statusTag(view, loadError);
+
   return (
     <section className="board" aria-busy={view === null && !loadError}>
-      <h2>Credential</h2>
+      <div className="credential-head">
+        <h2>Credential</h2>
+        <span
+          className={tag.className}
+          data-testid="credential-status-tag"
+          role="status"
+          aria-label={`Credential status: ${tag.label}`}
+        >
+          {tag.label}
+        </span>
+      </div>
       <p className="state-line">{loadError ?? statusCopy(view)}</p>
       <form className="create-form" onSubmit={submit}>
         <div className="field">

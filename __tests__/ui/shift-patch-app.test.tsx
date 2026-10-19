@@ -405,9 +405,12 @@ describe("ShiftPatchApp", () => {
     });
     render(<ShiftPatchApp />);
     await signIn("maria.lopez@example.com");
+    expect(await screen.findByRole("heading", { name: "Maria Lopez" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Credential" }));
     expect(await screen.findByTestId("credential-upload-input")).toBeInTheDocument();
     expect(screen.getByTestId("credential-expiry-date-input")).toBeInTheDocument();
     expect(await screen.findByText("Eligible through 2027-01-01. No document has been uploaded.")).toBeInTheDocument();
+    expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Active");
 
     const file = new File(["%PDF-"], "license.pdf", { type: "application/pdf" });
     fireEvent.change(screen.getByTestId("credential-upload-input"), { target: { files: [file] } });
@@ -415,6 +418,7 @@ describe("ShiftPatchApp", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save credential" }));
     expect(await screen.findByText("Credential saved. It is expired and cannot be used to claim a shift.")).toBeInTheDocument();
     expect(screen.getByText("Expired on 2020-01-01. This credential cannot be used to claim a shift.")).toBeInTheDocument();
+    expect(screen.getByTestId("credential-status-tag")).toHaveTextContent("Expired");
     const post = calls("/api/credentials").find((init) => init?.method === "POST");
     expect(post?.body).toBeInstanceOf(FormData);
     expect(post?.headers && "Content-Type" in (post.headers as object)).toBe(false);
