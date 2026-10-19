@@ -92,6 +92,9 @@ export function ShiftPatchApp() {
   const holdRef = useRef(false);
   const loginLock = useRef(false);
   const credentialLock = useRef(false);
+  const shiftReads = useRef(0);
+  const credentialReads = useRef(0);
+  const adminReads = useRef(0);
 
   const setHoldBoth = useCallback((value: boolean) => {
     holdRef.current = value;
@@ -134,16 +137,17 @@ export function ShiftPatchApp() {
     snap: number,
     releaseHold: boolean,
   ): Promise<boolean> => {
+    const ticket = ++shiftReads.current;
     try {
       const shifts = target.user.role === "agency"
         ? await listAgency(target.token, target.user.id, signal)
         : await listMarketplace(target.token, signal);
-      if (epoch.current !== snap) return false;
+      if (epoch.current !== snap || shiftReads.current !== ticket) return false;
       setList({ status: "ready", shifts, loadError: null });
       if (releaseHold) setHoldBoth(false);
       return true;
     } catch (error) {
-      if (isAbort(error) || epoch.current !== snap) return false;
+      if (isAbort(error) || epoch.current !== snap || shiftReads.current !== ticket) return false;
       if (error instanceof ApiError && error.status === 401) {
         expire();
         return false;
@@ -159,12 +163,13 @@ export function ShiftPatchApp() {
   }, [expire, setHoldBoth]);
 
   const loadCredential = useCallback(async (target: Session, signal: AbortSignal, snap: number) => {
+    const ticket = ++credentialReads.current;
     try {
       const view = await readCredential(target.token, signal);
-      if (epoch.current !== snap) return;
+      if (epoch.current !== snap || credentialReads.current !== ticket) return;
       setCredential({ status: "ready", view, error: null });
     } catch (error) {
-      if (isAbort(error) || epoch.current !== snap) return;
+      if (isAbort(error) || epoch.current !== snap || credentialReads.current !== ticket) return;
       if (error instanceof ApiError && error.status === 401) {
         expire();
         return;
@@ -179,10 +184,11 @@ export function ShiftPatchApp() {
   }, [expire]);
 
   const loadAdmin = useCallback(async (target: Session, signal: AbortSignal, snap: number) => {
+    const ticket = ++adminReads.current;
     const dashboardPromise = readAdminDashboard(target.token, signal);
     const auditPromise = readAudit(target.token, signal);
     const [dashboard, audit] = await Promise.allSettled([dashboardPromise, auditPromise]);
-    if (isAbort(dashboard.status === "rejected" ? dashboard.reason : null) || epoch.current !== snap) return;
+    if (isAbort(dashboard.status === "rejected" ? dashboard.reason : null) || epoch.current !== snap || adminReads.current !== ticket) return;
     if (dashboard.status === "rejected" && dashboard.reason instanceof ApiError && dashboard.reason.status === 401) {
       expire();
       return;
@@ -191,7 +197,7 @@ export function ShiftPatchApp() {
       expire();
       return;
     }
-    if (epoch.current !== snap) return;
+    if (epoch.current !== snap || adminReads.current !== ticket) return;
     setAdmin((prev) => {
       const next = { ...prev };
       if (dashboard.status === "fulfilled") {

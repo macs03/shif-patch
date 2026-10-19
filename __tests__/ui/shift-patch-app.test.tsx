@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { trialShifts } from "@/__tests__/fixtures/trial-shifts";
 import { ShiftPatchApp } from "@/app/components/ShiftPatchApp";
@@ -154,6 +154,39 @@ describe("ShiftPatchApp", () => {
     await signIn("maria.lopez@example.com");
     expect(await screen.findByText("Your session has expired. Sign in again.")).toBeInTheDocument();
     expect(screen.queryByTestId("shift-list-item")).not.toBeInTheDocument();
+  });
+
+  it("keeps the newer shift list when an older refresh finishes last", async () => {
+    let releaseSlow: (response: Response) => void = () => undefined;
+    const slowList = new Promise<Response>((resolve) => {
+      releaseSlow = resolve;
+    });
+    let lists = 0;
+    const fresh = trialShifts.map((shift) => (
+      shift.id === "shift-1" ? { ...shift, agencyName: "Fresh Agency" } : shift
+    ));
+    installFetch((url) => {
+      if (url.endsWith("/api/auth/login")) return jsonResponse({ token: "token-nurse", user: nurse });
+      if (url.endsWith("/api/credentials")) return jsonResponse({ credential: null, status: "missing" });
+      lists += 1;
+      if (lists === 1) return jsonResponse({ shifts: trialShifts });
+      if (lists === 2) return slowList;
+      return jsonResponse({ shifts: fresh });
+    });
+    render(<ShiftPatchApp />);
+    await signIn("maria.lopez@example.com");
+    expect(await screen.findAllByTestId("shift-list-item")).toHaveLength(3);
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(await screen.findByText("Fresh Agency")).toBeInTheDocument();
+    await act(async () => {
+      releaseSlow(jsonResponse({
+        shifts: [{ ...trialShifts[0], id: "shift-stale", agencyName: "Stale Agency" }],
+      }));
+    });
+    expect(screen.queryByText("Stale Agency")).not.toBeInTheDocument();
+    expect(screen.getByText("Fresh Agency")).toBeInTheDocument();
+    expect(screen.getAllByTestId("shift-list-item")).toHaveLength(3);
   });
 
   it("claims an open shift and rejects an expired credential without marking it filled", async () => {

@@ -35,5 +35,6 @@ This workflow uses Markdown and the existing agent; Spec Kit and OpenSpec are no
 - [005-core-user-experience/spec.md](005-core-user-experience/spec.md): login, nurse marketplace, agency management and critical browser workflows on the existing API. UI is implemented; Playwright E2E is still pending dependency approval.
 - [006-credentials-admin/spec.md](006-credentials-admin/spec.md): private credential upload, admin shift overview, audit log and scheduled-hours preview. Implemented and manually verified, with the limits recorded in its tasks.
 - [007-ci-e2e/spec.md](007-ci-e2e/spec.md): GitHub Actions quality workflow without a backend. Local Node 24 checks passed; a GitHub run is still unobserved. Real-backend verification and Vercel are out of scope.
+- [008-consistency-audit/spec.md](008-consistency-audit/spec.md): consistency, security, UI and verification audit. One compatible refresh-race fix is applied; hosted RLS and some viewport checks remain unverified.
 
 Feature 004 task summaries now distinguish implementation from partial verification; dated historical results remain in its execution log. Cancellation and credential expiry decisions are resolved there.
