@@ -30,9 +30,13 @@ Do not claim compliance by default: replace placeholders and record actual excep
 
 ## Data, contracts and security
 
+For application work, trace the affected UI/form → typed action → client transport → route → server/data operation and public response path. Name each owner, reused components/helpers/schemas, identity/ownership checks, body/response limits and relevant stale/pending/uncertain/form-lifetime invariants. Follow the project's engineering conventions; explain any necessary departure instead of adding a parallel pattern. Skip unrelated boundaries for a genuinely local or documentation-only change.
+
 {{If applicable: Supabase migrations, access boundaries, input validation, authentication, authorization, atomicity and serialization. For documentation-only tasks, state that these do not apply.}}
 
 ## Planned verification
+
+Use the current constitution version above. Identify observable baseline/post-change regressions for affected flows; for UI consider session/stale requests, pending/uncertain actions, actual confirmation controls and form/dialog lifetimes. Select offline unit/UI separately from hosted suites. Plan native-browser focus/Escape/modality checks separately from jsdom mocks. Avoid tests that merely mirror the implementation.
 
 | Criterion | Check | Expected result | Evidence reference |
 | --- | --- | --- | --- |

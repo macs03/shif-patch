@@ -7,8 +7,7 @@ Specification: [spec.md](spec.md) · Plan: [plan.md](plan.md) · Date: 2026-10-1
 | T00 | R01–R05 / planning delivery | Inspect callers and define criteria/plan | Completed | Three action boundaries mapped; existing CSS preserved |
 | T01 | R01–R04 / AC01–AC04 | Add focused confirmation and app no-mutation tests; record baseline | Completed | 70-test baseline; 3 new expected failing cases before change; 7 focused cases pass after |
 | T02 | R01–R04 / AC01–AC04 | Gate ShiftCard and CreateShiftForm callbacks with initial native confirmation | Completed; superseded by T04 | Same callback payloads; cancellation/disabled paths do nothing |
-| T03 | R05 / AC05 | Local checks, diff/docs review and final evidence | Completed locally | Node 24: 10 suites / 77 tests, typecheck/lint pass; native browser/build limits below |
-
+| T03 | R05 / AC05 | Local checks, diff/docs review and final evidence | Completed locally (initial implementation) | Historical Node 24: 10 suites / 77 tests, typecheck/lint; T04 supersedes native UI; limits below |
 | T04 | R01–R06 / AC01–AC06 | Reuse application Dialog shell, replace native prompts and verify real dialog interactions | Completed locally | Shared post-dialog lifecycle; 84 tests/typecheck/lint pass; browser limits below |
 
 ## Coverage

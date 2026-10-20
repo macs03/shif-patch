@@ -12,7 +12,7 @@ The MVP has local Jest checks and recorded hosted checks but no repository CI wo
 
 - Included: the GitHub Actions quality workflow, Node 24, npm ci, lint, typecheck, the existing unit and UI Jest suites, a production build without Supabase credentials, read-only permissions and truthful status.
 - Excluded: a separate or paid Supabase project, hosted integration, Playwright runs, race accounts, GitHub database secrets, Vercel, hosting, preview deployments, production deployment, CD, new business features, broad browser matrices, performance/load testing and coverage-percentage targets.
-- This session delivers specifications, a plan and documentation corrections. It does not install dependencies, create workflows, configure external accounts or execute browser E2E.
+- The original planning session delivered documents only. The quality workflow now exists, with recorded local checks and unobserved GitHub execution in tasks.md. Hosted/browser E2E remains withdrawn; no new dependency or external account is part of this scope.
 
 ## Requirements and acceptance criteria
 

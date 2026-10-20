@@ -6,7 +6,7 @@ Source: user requests a readability refactor of app/components/ShiftPatchApp.tsx
 
 ## Problem and expected outcome
 
-ShiftPatchApp currently contains 664 lines: session/request orchestration, signed-out form markup, nurse/agency views, shared shift-board rendering and publishing-dialog lifecycle. AdminDashboard is already separate. Give each role a clear component entry and keep shared session/mutation safeguards in one owner. This is an explicitly requested maintenance improvement, not a demonstrated vulnerability or performance defect.
+At the planning baseline, ShiftPatchApp contained 664 lines: session/request orchestration, signed-out form markup, nurse/agency views, shared shift-board rendering and publishing-dialog lifecycle. AdminDashboard was already separate. The implemented split gives each role a clear component entry and keeps shared session/mutation safeguards in one owner. This is an explicitly requested maintenance improvement, not a demonstrated vulnerability or performance defect.
 
 ## Scope
 
@@ -37,6 +37,8 @@ Preserve routes, requests/responses/errors, permissions, fixture values, local t
 | AC09 | Session absent/present, role changes or parent rerenders | One function in renderAppView.tsx selects the view from the safe user profile's role, including signed-out login, and returns React elements. Parent has no rendering branches for authentication/role selection. Selector has no hooks, requests, token access, independent mode state, URL/history changes or direct function calls to React components. Only the selected view mounts; existing shared chrome/DOM and child identities remain stable |
 
 ## Contracts and decisions
+
+Current maintenance amendment under constitution 1.3.0: [012](../012-shift-action-confirmation/spec.md) extracted the PostShiftDialog native shell/lifecycle into shared Dialog, composed by both publication and ConfirmationDialog. The role/selector split and parent async ownership remain intact; the new confirm-before-mutation interaction supersedes the original immediate-action UI. Original 011 implementation evidence remains historical; [013](../013-harness-guidance-sync/tasks.md) records documentation reconciliation.
 
 app/page.tsx keeps the named ShiftPatchApp export. Browser work remains in the existing client module graph; server/database modules stay outside it. API clients remain in lib/client/api.ts. Views receive only required data/callbacks, with existing public domain shapes. No new token props, markup, logs or storage.
 

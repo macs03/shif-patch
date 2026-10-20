@@ -1,6 +1,6 @@
 # ShiftPatch Development Constitution
 
-Version: 1.2.0 · Adopted: 2026-10-14 · Last amended: 2026-10-14
+Version: 1.3.0 · Adopted: 2026-10-14 · Last amended: 2026-10-19
 
 This constitution governs project agents and documents under `specs/`. Explicit user instructions take precedence; the challenge contracts define functional behavior. Skill recommendations cannot change those contracts.
 
@@ -18,9 +18,15 @@ Preserve IDs, names, emails, dates, facility-local times, roles, messages, respo
 
 Document decisions not specified by the packet and their impact before implementation. An abbreviated example does not replace the complete contract.
 
+Compatibility preserves legitimate user flows, business rules and exact data. Explicitly authorized interaction or error-contract changes must be specified and tested; internal refactoring does not authorize them implicitly. Keep the approved JSON limits/throttle responses and shift-action confirmation requirements in their feature contracts.
+
 ## III. Minimal solution within scope
 
 Use Next.js App Router, strict TypeScript and repository conventions. Reuse existing code and dependencies; add tools only when a task justifies them and authorization exists. Follow Ponytail and consult relevant guidance, including documentation for the installed Next.js version.
+
+Keep UI composition separate from session/request coordination. Preserve a single owner for session invalidation, stale-read tickets, synchronous mutation locks and uncertain-outcome reconciliation. Views receive typed data/actions rather than tokens or controller internals. Extract components for concrete responsibilities; preserve keys and form mount/reset lifetimes rather than pursuing a line-count target or adding speculative stores/hooks.
+
+Reuse the shared application dialog for the approved claim, reopen and publish confirmations. Dismissal must never mutate; acceptance must retain validation, current eligibility/pending checks and duplicate protection. Preserve accessible naming, safe initial focus, native modal lifecycle and nested-dialog isolation. UI selection and confirmation never replace server authorization.
 
 Do not create a `scripts/` directory or custom utilities for one-time work. Manage the database in Supabase; for now, keep only SQL migrations under `db/migrations/`, including fixture loading. Configuring SDD does not authorize additional features.
 
@@ -32,11 +38,15 @@ Keep secrets, connections and password hashes out of browsers and public respons
 
 Authenticate and authorize inside every protected endpoint; validate external input and resource ownership. The marketplace can list both agencies as required by its contract; agency operations are scoped to verified identity. Verify RLS and data changes directly in Supabase. Consult the Supabase skill before SQL changes.
 
+Preserve explicit communication boundaries: typed UI actions reach shared client transport and thin App Router handlers, then server-only auth/data operations with user-scoped database access. Domain schemas define validated inputs and public outputs; forms submit parsed values, protected routes authenticate before body reads, and role/ownership checks precede disclosure or mutation. Reuse the bounded HTTP/error helpers and safe serializers; never expose raw provider/storage/database details, auto-retry uncertain writes, or substitute UI checks for server enforcement. Follow established patterns across actual callers and record justified departures in the selected plan rather than introducing parallel conventions.
+
 ## V. Traceability and actual checks
 
 Link each task to requirements and acceptance criteria. Identify requirements by feature folder and ID, for example `001-shiftpatch/R03`. Record affected files, dependencies, planned checks and actual results.
 
 Verify in proportion to the change: document review for documentation; types and lint for application changes; integration checks for API contracts; Supabase verification for migrations and permissions; visual review and real flows for UI. Avoid tests that only mirror implementation. Record environmental failures and unexecuted checks as blocked or pending, never passed.
+
+Use the supported Node runtime and the existing Jest projects. Select unit/UI explicitly for offline checks; hosted suites are separate, gated work. Before behavioral refactoring, record a relevant current baseline and characterize missing observable behavior. Keep regression assertions for success, rejection, boundary, stale/session, duplicate/uncertain and dialog/form-lifetime cases as applicable. Exercise actual confirmation controls; native dialog mocks must be restored and cannot prove physical Escape, focus restoration or modal stacking in a browser. Do not execute hosted mutations until their disposable-data cleanup is safe and verification is authorized.
 
 ## VI. Complete evidence and honest status
 
@@ -48,6 +58,8 @@ Record scope, decisions, checks, failures and evidence availability in the featu
 
 Complete a task only when its criteria are satisfied and its necessary checks have evidence. An installed skill, declared type or prepared migration does not prove execution or deployment. Never invent agents, delegation, tests or results.
 
+Report implementation, local checks, native-browser checks, production build, hosted controls and external CI execution separately. Local implementation may be complete while named follow-up tasks remain open; do not silently close a pending remediation or call skipped tests deployed verification. Historical counts and constitution reviews remain dated evidence. New amendments add current guidance without rewriting previous outcomes.
+
 ## VII. Amendments
 
 When instructions conflict, follow the user's instructions and external contracts, then update affected documents. Record the date, reason and version for constitution amendments, and review their impact on templates, plans, tasks and `AGENTS.md`. Do not request additional approval for already authorized changes.
@@ -58,5 +70,5 @@ Increment the major version for incompatible principle changes, the minor versio
 | --- | --- | --- |
 | 1.0.0 | 2026-10-14 | Adopted SDD principles and existing project decisions, including Supabase, no custom scripts and manual evidence preservation |
 | 1.1.0 | 2026-10-14 | Required English project documentation and consolidated technical decisions in feature plans; retained original-language transcripts |
-
 | 1.2.0 | 2026-10-14 | Removed the separate documentation directory; consolidated manual evidence guidance here, verification summaries in feature tasks and skill provenance under .agents |
+| 1.3.0 | 2026-10-19 | User-requested synchronization after 008–012: explicit UI/session ownership, component/client/API/server communication conventions, shared shift confirmation dialogs, regression-harness guidance and separate implementation/verification status; no business permission change |

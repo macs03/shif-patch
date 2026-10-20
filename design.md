@@ -49,6 +49,10 @@ Locked visual system for the app (Hallmark **Cobalt**, modern-minimal). Implemen
 - `:focus-visible` ring at 2px `--color-focus`, no animated focus
 - Tabs: `tablist` / `tab` / `tabpanel`; icon buttons: `aria-label` + `title`
 
+## Shared dialogs
+
+Publication and shift-action confirmations reuse the same Dialog shell, existing `.modal`/`.modal-bar` classes and body portal. ConfirmationDialog shows action/shift details, initially focuses Cancel and uses an explicit action label. Cancel, Close, Escape and backdrop dismissal never submit. Nested publication confirmation preserves the underlying draft and isolates close/cancel events. Native focus return, modal stacking and physical Escape need browser verification; jsdom evidence is recorded separately in [012](specs/012-shift-action-confirmation/tasks.md). No browser window.confirm is used for claim/reopen/publish.
+
 ## Controls
 
 - **Radius:** `--radius-control` (6px) on inputs, buttons, cards, tabs, logo

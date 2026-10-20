@@ -1,8 +1,22 @@
 # Test Harness — Plan
 
-Specification: [spec.md](spec.md) · Date: 2026-10-14 · Status: Approved; implementation pending
+Specification: [spec.md](spec.md) · Date: 2026-10-14 · Status: Implemented; maintenance guidance synchronized in 013
 
-Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
+Current maintenance review: [CONSTITUTION.md](../CONSTITUTION.md) 1.3.0 under [013](../013-harness-guidance-sync/plan.md). Original implementation review below used 1.2.0; dated evidence is unchanged.
+
+## Current harness maintenance
+
+The test harness supports the agent's broader [engineering conventions](../013-harness-guidance-sync/plan.md#engineering-conventions). Test the real typed UI-action → client → route → server contract at the affected boundary; mock external transport/provider calls where appropriate, preserving role, payload, safe-error and no-side-effect assertions. Do not reproduce domain rules inside test-only service layers or introduce new architecture to satisfy a test.
+
+Keep the existing Jest/ts-jest config and three projects; no runner/dependency change is needed. Use Node 24 and `npm test -- --selectProjects unit --selectProjects ui --runInBand` for offline quality, plus typecheck/lint for application changes. Bare npm test includes the optional hosted project; it is not an offline alias. Zod validates boundary data; the test server-only stub never authorizes production client imports.
+
+Exercise real role components via ShiftPatchApp and targeted boundaries, with typed callbacks and mocked fetch. Preserve stale tickets/epoch, pending locks, uncertain reconciliation, credential-save authority, validated payloads and form mount/reset behavior. For shift actions, click actual ConfirmationDialog controls; assert no request on Cancel/Close/cancel/backdrop, original payload on accept, safe initial focus and no duplicate accept. Retain Strict Mode/nested dialog tests with asynchronous close mocks restored after each test. Native focus-return/modality/Escape remain separate browser checks.
+
+Hosted read tests use SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY and real mapped login/user-scoped helpers. Hosted mutation cleanup is still pending in 010/T04; do not enable mutation tests before audit-aware disposable-row cleanup is verified and execution authorized. CI receives no backend credentials. Read current spec AC07 and 011/012 evidence for regression scope; record new outcomes in the selected feature's tasks, not by overwriting old counts.
+
+## Original implementation plan (historical)
+
+The remaining sequence records the original dependency/setup work, not instructions to reinstall or create a second harness. Current runner choice is ts-jest; no claim about next/jest availability is required. The old Node 22 result is historical; new checks require Node 24.
 
 ## Minimal technical decision
 

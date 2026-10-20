@@ -2,13 +2,13 @@
 
 Feature ID: 012-shift-action-confirmation · Date: 2026-10-19 · Status: App-dialog implementation complete locally; browser verification pending
 
-Source: user requests a confirmation popup before claiming a shift and similar consequential buttons, to avoid accidental actions. Constitution: [CONSTITUTION.md](../CONSTITUTION.md) 1.2.0. Preserve 004–011 API/business contracts and parent mutation safeguards.
+Source: user requests a confirmation popup before claiming a shift and similar consequential buttons, to avoid accidental actions. Original implementation reviewed constitution 1.2.0; current documentation maintenance follows [CONSTITUTION.md](../CONSTITUTION.md) 1.3.0 under [013](../013-harness-guidance-sync/tasks.md). Preserve 004–011 API/business contracts and parent mutation safeguards.
 
 ## Scope and outcome
 
 Require explicit confirmation before claim, reopen and valid publish submissions. Use the existing app dialog styling and shared native HTML dialog lifecycle with English copy matching the existing UI. It identifies the action and shift role/date/local hours; existing shifts include agency, and reopening identifies the selected reason and consequence. Cancel/dismiss never calls the mutation callback. This UI change adds an intentional confirmation step; underlying permissions, requests, response handling and business outcomes remain unchanged.
 
-No confirmation for navigation, refresh, login, logout or opening the publish form. Credential replacement is outside this shift-action request. No server/SQL/CSS/dependency change, hosted mutation, commit or publication. Preserve existing staged globals.css changes.
+No confirmation for navigation, refresh, login, logout or opening the publish form. Credential replacement is outside this shift-action request. No server/SQL/CSS/dependency change, hosted mutation, commit or publication. Preserve unrelated user changes.
 
 ## Requirements and acceptance criteria
 

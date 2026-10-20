@@ -24,6 +24,8 @@ Copy this document together with `plan.md` and `tasks.md` into `specs/NNN-slug/`
 
 Cover relevant success, error and boundary cases, including roles and permissions when accessing data. Do not invent states or messages absent from the contract.
 
+For changes to existing flows, identify the current owner and compatibility invariants, including relevant session/request protections and form/dialog lifetimes. Record explicitly authorized interaction/error-contract changes rather than treating a refactor as implicit permission. Define separate criteria for native-browser or hosted checks when those are needed; local mocks do not satisfy them.
+
 ## Requirements
 
 | ID | Required behavior | Acceptance criteria |

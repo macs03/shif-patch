@@ -1,6 +1,6 @@
 # Core User Experience — Specification
 
-Feature ID: 005-core-user-experience · Date: 2026-10-15 · Status: Implemented in the application; browser E2E runner still pending dependency approval
+Feature ID: 005-core-user-experience · Date: 2026-10-15 · Status: Implemented in the application; real-backend browser E2E unverified and withdrawn from 007 scope
 
 Source: user's main ShiftPatch experience epic, including nurse marketplace, agency management, lifecycle, nine test IDs and critical E2E tests. Parent: [001-shiftpatch/spec.md](../001-shiftpatch/spec.md), R03–R10. API dependency: [004-auth-rbac-api/spec.md](../004-auth-rbac-api/spec.md). Applicable constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0.
 
@@ -14,9 +14,11 @@ Included: login interface, role-specific nurse marketplace and agency dashboard,
 
 The signed-out login uses a centered card on a full-viewport canvas, Hallmark Cobalt tokens in `app/globals.css`, and a show/hide password control beside the Password label. Signed-in views use a full-width header (SP monogram, name, role badge, icon sign-out) and nurse role tabs (Marketplace / Credential). The locked token map and chrome rules are summarized in [`design.md`](../../design.md) at the repo root. Existing login test IDs, labels and API behavior are unchanged.
 
+Current amendments: [011](../011-role-component-split/spec.md) separates role views via renderAppView while ShiftPatchApp retains session/request coordination. [012](../012-shift-action-confirmation/spec.md) requires shared app-dialog confirmation before claim/reopen/publish; dismissing sends no mutation and preserves the draft/reason. Original action test IDs open that confirmation, whose named acceptance button sends the existing request. These amendments supersede any implied immediate submission in the original scenarios below; API outcomes and permissions remain unchanged. Maintenance guidance was synchronized under constitution 1.3.0 in [013](../013-harness-guidance-sync/tasks.md).
+
 Excluded: recommendations, automatic matching, push/email notifications, advanced scheduling, registration, password recovery, token refresh, credential uploads, audit logs, timesheets, a new admin dashboard, nurse cancellation UI, new API endpoints and deployment. Existing API cancellation rights for a claiming nurse remain unchanged. The six additional parent test IDs for deferred modules remain parent obligations; this epic implements the nine listed below.
 
-Application implementation is delivered. Browser E2E completion is planned in [007-ci-e2e/plan.md](../007-ci-e2e/plan.md), including dependency approval, isolated test identities and a Node 24 production build. Vercel/deployment remains excluded.
+Application implementation is delivered. Real-backend browser E2E was withdrawn from [007](../007-ci-e2e/spec.md); it is not pending delivery there. 005/T07 remains an evidence gap, requiring separately authorized scope if resumed. No browser dependency installation or new backend is authorized by this documentation update. Vercel/deployment remains excluded.
 
 ## Requirements
 
@@ -39,15 +41,15 @@ Application implementation is delivered. Browser E2E completion is planned in [0
 | AC03 | R01 | No active UI session, explicit sign-out, page reload or protected request returns 401 | Login is shown; session/previous user's data cleared; expired-session feedback displayed for 401; no automatic refresh |
 | AC04 | R02 | Nurse loads the marketplace with baseline fixtures | Shifts from both agencies appear, including past fixture dates; filled shifts stay visible |
 | AC05 | R02 | Any shift card renders | Agency name, RN/LPN role, date, local start/end, open/filled status and assigned nurse's public ID when filled are visible |
-| AC06 | R03 | Eligible nurse claims an open shift | API returns filled shift; card displays filled status and caller's nurse ID; claim action becomes unavailable; success banner appears |
+| AC06 | R03 | Eligible nurse accepts confirmation to claim an open shift | API returns filled shift; card displays filled status and caller's nurse ID; claim action becomes unavailable; success banner appears |
 | AC07 | R03 | Nurse with expired or missing credentials attempts a claim | Server rejects with 403 and `Credential expired, cannot claim shift`; error banner appears; shift is not locally marked filled |
 | AC08 | R03 | Two eligible nurses claim the same open shift concurrently | At most one succeeds; loser receives conflict feedback and reloads authoritative state; both views identify the winner |
 | AC09 | R03 | Claim fails from network/server error or user repeats a pending action | No false success; pending duplicate submissions prevented; retry enabled after completion and state reconciled before another attempt when outcome is uncertain |
 | AC10 | R04 | Either agency opens its dashboard | Only its own shifts appear, including open and filled states |
-| AC11 | R04 | Agency opens and submits a valid create form | Role, date, start/end accepted; new open shift appears with its authenticated agency and `claimedBy:null`; success banner appears |
+| AC11 | R04 | Agency submits a valid create form and confirms publication | Role, date, start/end accepted; new open shift appears with its authenticated agency and `claimedBy:null`; success banner appears |
 | AC12 | R04 | Invalid form or forged agency identity | Field validation prevents ordinary invalid submission; API remains authoritative; client cannot select another agency; rejected writes show errors without adding a card |
-| AC13 | R05 | Owning agency cancels a filled shift with `advance` | Shift reopens and assigned nurse clears; success banner appears; nurse marketplace reload shows it claimable |
-| AC14 | R05 | Owning agency cancels a filled shift with `no-show` | Same reopened/null result; reason sent exactly as contracted; no cancelled lifecycle state is introduced |
+| AC13 | R05 | Owning agency confirms reopening a filled shift with `advance` | Shift reopens and assigned nurse clears; success banner appears; nurse marketplace reload shows it claimable |
+| AC14 | R05 | Owning agency confirms reopening a filled shift with `no-show` | Same reopened/null result; reason sent exactly as contracted; no cancelled lifecycle state is introduced |
 | AC15 | R05 | Other agency attempts management, or cancellation conflicts/fails | API denies foreign management; no foreign controls/data on own dashboard; error banner and authoritative reload on conflict; no false reopened state |
 | AC16 | R06 | List loads, returns empty, fails or mutation runs | Explicit loading/empty/error states, retry for load errors, disabled pending actions, visible success/error feedback; previous user's requests cannot populate a new session |
 | AC17 | R06 | Keyboard or mobile user completes critical flows | Associated labels, visible focus, status conveyed beyond color, announced notifications, usable form errors and no horizontal overflow at 320/375/414/768px plus desktop |

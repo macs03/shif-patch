@@ -6,6 +6,8 @@ Reviewed constitution: [CONSTITUTION.md](../CONSTITUTION.md), version 1.2.0. Bas
 
 ## Minimal technical decision
 
+Current maintenance amendment (013, constitution 1.3.0): retain the original extraction plan/evidence below, with [012](../012-shift-action-confirmation/plan.md) now owning the shared Dialog/ConfirmationDialog lifecycle. PostShiftDialog is a thin composition of Dialog and CreateShiftForm; refs/effect/close suppression live in Dialog, not PostShiftDialog. Shared session/request ownership and pure role selection are unchanged.
+
 Extract five components and add one view-selection function in the existing app/components directory. Keep ShiftPatchApp as session/request coordinator; renderAppView selects the UI. Do not move asynchronous code into an opaque hook just to reduce line count: the goal is clear responsibilities. AdminDashboard already supplies the admin boundary.
 
 | File | Responsibility and inputs | State ownership |
@@ -16,7 +18,7 @@ Extract five components and add one view-selection function in the existing app/
 | NurseDashboard.tsx (new) | Nurse tabs, conditional marketplace/credential panels; compose ShiftBoard and CredentialForm | Controlled panel selection; file/date state stays inside conditionally mounted CredentialForm |
 | AgencyDashboard.tsx (new) | Own-shift board, post button and conditional PostShiftDialog; create/cancel/open/close callbacks | creating remains controlled; no duplicate request/mutation state |
 | ShiftBoard.tsx (new) | Shared nurse/agency section, heading/refresh/loading/error/retry/empty/list and ShiftCard mapping; mode/data/pending/hold/actions | Derived card pending/locked only. Optional children insert actual agency controls after board bar, preserving DOM order |
-| PostShiftDialog.tsx (new) | Body portal/dialog, native show/close effect, DOM ref and cleanup guard; existing CreateShiftForm | DOM refs/effect only; mounted while creating; pending/locked/submit/close passed as props |
+| PostShiftDialog.tsx (extracted; updated by 012) | Dialog shell plus CreateShiftForm; shared Dialog now owns native portal/show/close/ref/guard | Mounted while creating; pending/locked/submit/close passed as props; confirmation draft state stays in CreateShiftForm |
 | AdminDashboard.tsx (reuse) | Current admin tabs, filters, metrics/lists and refresh | Existing local state unchanged; no wrapper/refetch effect |
 
 ```text

@@ -1,6 +1,8 @@
 # ShiftPatch — MVP Specification
 
-Status: API/UI implemented across 004–006; CI, browser E2E and final supported-runtime verification planned in 007. Source: ShiftPatch — Required API Routes & Test IDs provided by the user, reference conversation 6ad00660-0cc0-83e8-b679-efd146e0f0cc. External contracts take precedence over abbreviated examples and skill recommendations.
+Status: API/UI implemented across 004–006; backend-free quality CI implemented in 007. Audits/hardening 008–010, role split 011 and app-dialog confirmations 012 are locally implemented with verification/follow-up limits in their tasks. Browser E2E, current build, deployed controls and hosted cleanup are not certified complete. Source: ShiftPatch — Required API Routes & Test IDs provided by the user, reference conversation 6ad00660-0cc0-83e8-b679-efd146e0f0cc. External contracts take precedence over abbreviated examples and skill recommendations.
+
+Current maintenance follows [constitution 1.3.0](../CONSTITUTION.md). The [011 role composition](../011-role-component-split/spec.md) keeps session/request safeguards in ShiftPatchApp and presentation selection in renderAppView. Under [012](../012-shift-action-confirmation/spec.md), claim/reopen/publish buttons open the shared app confirmation before sending their existing requests; dismissal sends none. This adds a user-authorized interaction step without changing API payloads or business permissions. Current harness guidance is in [003](../003-test-harness/spec.md); synchronization evidence is in [013](../013-harness-guidance-sync/tasks.md).
 
 ## Requirements and acceptance
 
@@ -58,7 +60,7 @@ The 19:00–07:00 shifts cross midnight. Do not change their dates or convert ti
 | timesheet-table | Timesheet table |
 | notification-banner | Success or error confirmation |
 
-Credential, audit and timesheet test IDs are packet requirements; their endpoints are not prescribed. Define their minimal views before implementation. Cancellation reopens a shift; the badge example does not add cancelled to the baseline Shift contract.
+Credential, audit and timesheet test IDs are packet requirements; their endpoints were not prescribed. Their minimal views/contracts were defined and implemented in [006](../006-credentials-admin/spec.md). Cancellation reopens a shift; the badge example does not add cancelled to the baseline Shift contract.
 
 ## Open questions
 

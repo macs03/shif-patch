@@ -8,7 +8,9 @@ Request/contract source: user's credential management and administrative dashboa
 
 Nurses need to submit a credential document and expiration date, see their current eligibility, and receive an authoritative rejection when an expired credential is used to claim a shift. Administrators need a read-only operational view of both agencies with current shift states and open/filled counts. Demonstrate these behaviors without building a verification, payroll or workforce management platform.
 
-The claim RPC already checks credential expiry; uploads, credential metadata reads and the administrative interface remain to be implemented. Existing code is a prerequisite, not evidence that this epic has passed verification.
+At the original baseline, the claim RPC checked credential expiry while uploads, credential metadata reads and the administrative interface were still pending. Those modules are now implemented, with actual evidence and limits in tasks.md; implementation does not certify all deployed controls.
+
+Current composition follows [011](../011-role-component-split/spec.md): NurseDashboard owns credential presentation and AdminDashboard retains its local tabs/filters; ShiftPatchApp coordinates requests/session reset. Claims now require the shared confirmation defined in [012](../012-shift-action-confirmation/spec.md); credential upload itself has no added confirmation requirement. Guidance synchronization in [013](../013-harness-guidance-sync/tasks.md) does not close earlier hosted/browser gaps or alter this feature's historical constitution review.
 
 ## Scope and priority
 

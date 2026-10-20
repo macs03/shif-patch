@@ -12,6 +12,8 @@ Derive only necessary tasks from the plan. Each task should deliver a small, ver
 
 Statuses: Pending, In progress, Blocked, Completed. For blocked tasks, identify the cause and what resolves it. Complete only when criteria are satisfied and required checks have evidence; an unexecuted check is not a passed check.
 
+Separate implementation and evidence status for local tests/typecheck/lint, build, native browser, hosted controls and live CI as applicable. Name deferred remediation tasks explicitly; implementation closure does not complete them. Preserve dated historical versions/counts and record only new actual outcomes. Documentation-only work needs document checks, not an invented application-test rerun.
+
 ## Coverage
 
 | Criterion | Responsible task | Current evidence |
